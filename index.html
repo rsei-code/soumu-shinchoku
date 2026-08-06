@@ -455,6 +455,15 @@
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
 
+  .loading-spinner{
+    width:34px;height:34px;margin:0 auto;
+    border:3px solid var(--line);
+    border-top-color:var(--accent);
+    border-radius:50%;
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
   .confirm-icon{
     width:56px;height:56px;border-radius:50%;
     background:var(--danger-soft);color:var(--danger);
@@ -507,6 +516,7 @@ let state = {
   view: 'table',
   expandedId: null,
   lastSyncedJSON: '',
+  loading: true,
 };
 
 let modalItem = null; // item being edited/created, or null
@@ -582,6 +592,7 @@ async function initData(){
     render(); // renders the "setup needed" banner (see render())
     return;
   }
+  render(); // show loading spinner immediately
   try{
     state.items = await apiList();
     state.lastSyncedJSON = JSON.stringify(state.items);
@@ -589,6 +600,7 @@ async function initData(){
     console.error(e);
     showToast('スプレッドシートへの接続に失敗しました');
   }
+  state.loading = false;
   render();
 }
 async function pollApi(){
@@ -639,6 +651,27 @@ function filteredSorted(){
 /* ============ Rendering ============ */
 function render(){
   const app = document.getElementById('app');
+
+  if(API_CONFIGURED && state.loading){
+    app.innerHTML = `
+      <div class="header">
+        <div class="brand">
+          <div class="seal">総</div>
+          <div class="brand-text">
+            <h1>総務課 進捗管理</h1>
+            <p>提案・確認事項トラッカー</p>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="empty-state">
+          <div class="loading-spinner"></div>
+          <p style="margin-top:14px;">スプレッドシートからデータを読み込んでいます…</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
 
   if(!API_CONFIGURED){
     app.innerHTML = `
