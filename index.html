@@ -57,22 +57,9 @@
     flex-wrap:wrap;
   }
   .brand{display:flex;align-items:center;gap:16px;}
-  .seal{
-    width:52px;height:52px;border-radius:50%;
-    border:2.5px solid var(--accent);
-    display:flex;align-items:center;justify-content:center;
-    color:var(--accent);
-    font-weight:700;font-size:22px;
-    flex-shrink:0;
-    position:relative;
-    transform:rotate(-4deg);
-  }
-  .seal::after{
-    content:"";
-    position:absolute;inset:5px;
-    border:1px solid var(--accent);
-    border-radius:50%;
-    opacity:0.55;
+  .logo-img{
+    height:46px;width:auto;flex-shrink:0;
+    display:block;
   }
   .brand-text h1{
     margin:0;
@@ -497,6 +484,7 @@
 /* ============ Constants ============ */
 // ここに、Google Apps Scriptをウェブアプリとしてデプロイして発行されたURLを貼り付けてください。
 // 手順は setup_guide.md を参照してください。
+const LOGO_SRC = 'data:image/png;base64,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';
 const API_URL = 'https://script.google.com/macros/s/AKfycbxvWrEo_j-oYM45UIGrG9jdiMHjyqJaxNOhZMb733C1en0kc1qYky2HCiHgTbAb2LZh/exec';
 const API_CONFIGURED = API_URL.indexOf('https://') === 0;
 const STATUS_LIST = ['進行中','保留','完了','却下'];
@@ -656,7 +644,7 @@ function render(){
     app.innerHTML = `
       <div class="header">
         <div class="brand">
-          <div class="seal">総</div>
+          <img class="logo-img" src="${LOGO_SRC}" alt="会社ロゴ">
           <div class="brand-text">
             <h1>総務課 進捗管理</h1>
             <p>提案・確認事項トラッカー</p>
@@ -677,7 +665,7 @@ function render(){
     app.innerHTML = `
       <div class="header">
         <div class="brand">
-          <div class="seal">総</div>
+          <img class="logo-img" src="${LOGO_SRC}" alt="会社ロゴ">
           <div class="brand-text">
             <h1>総務課 進捗管理</h1>
             <p>提案・確認事項トラッカー</p>
@@ -707,7 +695,7 @@ function render(){
   app.innerHTML = `
     <div class="header">
       <div class="brand">
-        <div class="seal">総</div>
+        <img class="logo-img" src="${LOGO_SRC}" alt="会社ロゴ">
         <div class="brand-text">
           <h1>総務課 進捗管理<span class="live-badge"><span class="live-dot"></span>スプレッドシート連携</span></h1>
           <p>提案・確認事項トラッカー ー データはGoogleスプレッドシートに保存されています</p>
