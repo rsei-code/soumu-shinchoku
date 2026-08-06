@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>総務課 進捗管理</title>
+<style>
+  :root{
+    --bg:#F3F5F7;
+    --surface:#FFFFFF;
+    --surface-alt:#EEF1F4;
+    --ink:#1B2430;
+    --ink-muted:#6B7684;
+    --ink-faint:#9AA3AF;
+    --line:#DEE3E8;
+    --line-strong:#C7CFD6;
+    --accent:#1E5F74;
+    --accent-ink:#12414F;
+    --accent-soft:#E3EEF0;
+    --accent-soft-strong:#CFE3E6;
+    --danger:#B84A3E;
+    --danger-soft:#F6E4E1;
+    --warn:#B5711F;
+    --warn-soft:#F5E8D6;
+    --good:#2E7D53;
+    --good-soft:#DEEFE4;
+    --hold:#6E5FA3;
+    --hold-soft:#E7E2F3;
+    --radius-s:6px;
+    --radius-m:10px;
+    --radius-l:16px;
+    --shadow-1:0 1px 2px rgba(20,30,40,0.06), 0 1px 1px rgba(20,30,40,0.04);
+    --shadow-2:0 8px 24px rgba(20,30,40,0.12), 0 2px 6px rgba(20,30,40,0.06);
+    --font-jp:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;
+    --font-mono:"SF Mono","Menlo","Consolas",monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--font-jp);
+    background:var(--bg);
+    color:var(--ink);
+    font-size:14px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{max-width:1360px;margin:0 auto;padding:28px 28px 80px;}
+
+  /* ---------- Header ---------- */
+  .header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:24px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:center;gap:16px;}
+  .seal{
+    width:52px;height:52px;border-radius:50%;
+    border:2.5px solid var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--accent);
+    font-weight:700;font-size:22px;
+    flex-shrink:0;
+    position:relative;
+    transform:rotate(-4deg);
+  }
+  .seal::after{
+    content:"";
+    position:absolute;inset:5px;
+    border:1px solid var(--accent);
+    border-radius:50%;
+    opacity:0.55;
+  }
+  .brand-text h1{
+    margin:0;
+    font-size:23px;
+    font-weight:800;
+    letter-spacing:0.02em;
+    color:var(--ink);
+  }
+  .brand-text p{
+    margin:3px 0 0;
+    font-size:12.5px;
+    color:var(--ink-muted);
+    letter-spacing:0.02em;
+  }
+  .live-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    margin-left:10px;
+    font-size:11px;
+    color:var(--good);
+    background:var(--good-soft);
+    padding:3px 9px 3px 7px;
+    border-radius:999px;
+    font-weight:600;
+    vertical-align:middle;
+  }
+  .live-dot{
+    width:6px;height:6px;border-radius:50%;background:var(--good);
+    animation:pulse 1.8s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(46,125,83,0.5);}
+    70%{box-shadow:0 0 0 5px rgba(46,125,83,0);}
+    100%{box-shadow:0 0 0 0 rgba(46,125,83,0);}
+  }
+
+  .stats-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .stat-chip{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-m);
+    padding:9px 16px;
+    min-width:88px;
+    text-align:center;
+    box-shadow:var(--shadow-1);
+  }
+  .stat-chip .num{
+    font-family:var(--font-mono);
+    font-size:20px;
+    font-weight:700;
+    color:var(--ink);
+    display:block;
+    line-height:1.1;
+  }
+  .stat-chip.danger .num{color:var(--danger);}
+  .stat-chip.accent .num{color:var(--accent);}
+  .stat-chip .lbl{
+    font-size:10.5px;
+    color:var(--ink-muted);
+    letter-spacing:0.03em;
+  }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-m);
+    padding:12px 14px;
+    margin-bottom:16px;
+    box-shadow:var(--shadow-1);
+  }
+  .search-box{
+    display:flex;align-items:center;gap:6px;
+    background:var(--surface-alt);
+    border:1px solid var(--line);
+    border-radius:var(--radius-s);
+    padding:7px 10px;
+    flex:1 1 220px;
+    min-width:160px;
+  }
+  .search-box input{
+    border:none;background:transparent;outline:none;
+    font-size:13px;font-family:var(--font-jp);color:var(--ink);
+    width:100%;
+  }
+  .search-box svg{flex-shrink:0;opacity:0.5;}
+
+  .status-filter-group{
+    display:flex;align-items:center;gap:6px;
+    padding:4px 6px;
+    border:1px solid var(--line);
+    border-radius:var(--radius-s);
+    background:var(--surface-alt);
+  }
+  .sfg-label{font-size:11.5px;color:var(--ink-muted);font-weight:700;padding-left:4px;letter-spacing:0.02em;}
+  .sfg-chip{
+    border:1.5px solid var(--line-strong);
+    background:var(--surface);
+    color:var(--ink-muted);
+    font-family:var(--font-jp);
+    font-size:12px;font-weight:700;
+    padding:5px 11px;border-radius:999px;
+    cursor:pointer;
+    transition:background .12s, color .12s, border-color .12s;
+  }
+  .sfg-chip:hover{border-color:var(--ink-faint);}
+  .sfg-chip.sfg-進行中.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .sfg-chip.sfg-保留.active{background:var(--hold);border-color:var(--hold);color:#fff;}
+  .sfg-chip.sfg-完了.active{background:var(--good);border-color:var(--good);color:#fff;}
+  .sfg-chip.sfg-却下.active{background:var(--danger);border-color:var(--danger);color:#fff;}
+
+  select, .btn{
+    font-family:var(--font-jp);
+    font-size:13px;
+  }
+  select{
+    border:1px solid var(--line);
+    background:var(--surface);
+    border-radius:var(--radius-s);
+    padding:7px 8px;
+    color:var(--ink);
+    outline:none;
+    cursor:pointer;
+  }
+  select:hover{border-color:var(--line-strong);}
+
+  .spacer{flex:1;}
+
+  .view-toggle{
+    display:flex;border:1px solid var(--line);border-radius:var(--radius-s);overflow:hidden;
+  }
+  .view-toggle button{
+    border:none;background:var(--surface);
+    padding:7px 13px;font-size:12.5px;color:var(--ink-muted);
+    cursor:pointer;font-family:var(--font-jp);font-weight:600;
+    display:flex;align-items:center;gap:5px;
+  }
+  .view-toggle button.active{background:var(--accent);color:#fff;}
+  .view-toggle button:not(.active):hover{background:var(--surface-alt);}
+
+  .btn{
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink);
+    padding:8px 14px;
+    border-radius:var(--radius-s);
+    cursor:pointer;
+    font-weight:600;
+    display:inline-flex;align-items:center;gap:6px;
+    transition:background .12s, border-color .12s;
+  }
+  .btn:hover{background:var(--surface-alt);}
+  .btn-primary{
+    background:var(--accent);border-color:var(--accent);color:#fff;
+  }
+  .btn-primary:hover{background:var(--accent-ink);}
+  .btn-ghost{border-color:transparent;background:transparent;}
+  .btn-ghost:hover{background:var(--surface-alt);}
+  .btn-icon{padding:6px;border-radius:var(--radius-s);}
+  .btn-sm{padding:5px 10px;font-size:12px;}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+  /* ---------- Table ---------- */
+  .table-wrap{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-m);
+    overflow:hidden;
+    box-shadow:var(--shadow-1);
+  }
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{
+    text-align:left;
+    padding:11px 12px;
+    background:var(--surface-alt);
+    border-bottom:1px solid var(--line);
+    font-size:11.5px;
+    color:var(--ink-muted);
+    font-weight:700;
+    letter-spacing:0.03em;
+    white-space:nowrap;
+    user-select:none;
+    cursor:pointer;
+  }
+  thead th:hover{color:var(--ink);}
+  thead th .arrow{opacity:0;font-size:10px;margin-left:3px;}
+  thead th.sorted .arrow{opacity:1;color:var(--accent);}
+  thead th.no-sort{cursor:default;}
+  thead th.no-sort:hover{color:var(--ink-muted);}
+
+  tbody tr{border-bottom:1px solid var(--line);cursor:pointer;transition:background .1s;}
+  tbody tr:hover{background:var(--surface-alt);}
+  tbody tr.overdue-row{background:linear-gradient(to right, var(--danger-soft) 0 4px, transparent 4px);}
+  tbody tr.expanded{background:var(--accent-soft);}
+  td{padding:11px 12px;vertical-align:top;}
+  .cell-assignee{font-weight:600;white-space:nowrap;}
+  .cell-title{max-width:280px;}
+  .cell-title .t{font-weight:600;color:var(--ink);}
+  .cell-title .sub{color:var(--ink-muted);font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;}
+  .cell-date{font-family:var(--font-mono);white-space:nowrap;font-size:12.5px;}
+  .overdue-tag{
+    display:inline-block;margin-top:3px;font-size:10px;font-weight:700;
+    color:var(--danger);background:var(--danger-soft);
+    padding:1px 6px;border-radius:4px;letter-spacing:0.02em;
+  }
+
+  .pill{
+    display:inline-block;
+    padding:2px 9px;
+    border-radius:999px;
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:0.02em;
+    white-space:nowrap;
+  }
+  .pill-高{background:var(--danger-soft);color:var(--danger);}
+  .pill-中{background:var(--warn-soft);color:var(--warn);}
+  .pill-低{background:var(--surface-alt);color:var(--ink-muted);}
+
+  /* stamp-style status chip */
+  .stamp{
+    display:inline-flex;
+    align-items:center;justify-content:center;
+    width:40px;height:40px;
+    border-radius:50%;
+    border:2px solid currentColor;
+    font-size:11px;
+    font-weight:700;
+    writing-mode:vertical-rl;
+    text-orientation:upright;
+    letter-spacing:1px;
+    transform:rotate(-3deg);
+    position:relative;
+    cursor:pointer;
+  }
+  .stamp::before{
+    content:"";position:absolute;inset:3px;border:1px solid currentColor;border-radius:50%;opacity:0.4;
+  }
+  .stamp-完了{color:var(--good);}
+  .stamp-進行中{color:var(--accent);}
+  .stamp-保留{color:var(--hold);}
+  .stamp-却下{color:var(--danger);}
+
+  .row-actions{display:flex;gap:6px;}
+  .row-actions .btn-icon{
+    width:34px;height:34px;
+    font-size:16px;
+    display:inline-flex;align-items:center;justify-content:center;
+    border-radius:8px;
+  }
+
+  .status-menu{
+    position:fixed;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-m);
+    box-shadow:var(--shadow-2);
+    padding:6px;
+    z-index:150;
+    min-width:120px;
+  }
+  .status-menu .sm-item{
+    display:flex;align-items:center;gap:8px;
+    padding:7px 10px;border-radius:var(--radius-s);
+    font-size:12.5px;font-weight:600;cursor:pointer;
+    color:var(--ink);
+  }
+  .status-menu .sm-item:hover{background:var(--surface-alt);}
+  .status-menu .sm-item.current{background:var(--accent-soft);}
+  .status-menu .sm-dot{
+    width:9px;height:9px;border-radius:50%;border:1.5px solid currentColor;flex-shrink:0;
+  }
+  .status-menu .sm-dot.stamp-完了{color:var(--good);}
+  .status-menu .sm-dot.stamp-進行中{color:var(--accent);}
+  .status-menu .sm-dot.stamp-保留{color:var(--hold);}
+  .status-menu .sm-dot.stamp-却下{color:var(--danger);}
+
+  .detail-row td{
+    background:var(--accent-soft);
+    padding:16px 20px 20px;
+    border-bottom:1px solid var(--line);
+  }
+  .detail-grid{display:flex;gap:28px;flex-wrap:wrap;}
+  .detail-block{flex:1 1 320px;min-width:260px;}
+  .detail-block h4{
+    margin:0 0 6px;font-size:11px;color:var(--accent-ink);
+    letter-spacing:0.04em;font-weight:800;
+  }
+  .detail-block p{margin:0;white-space:pre-wrap;color:var(--ink);font-size:13px;}
+  .detail-block p.empty{color:var(--ink-faint);font-style:italic;}
+  .detail-actions{margin-top:14px;display:flex;gap:8px;}
+
+  .empty-state{
+    text-align:center;padding:60px 20px;color:var(--ink-muted);
+  }
+  .empty-state .big{font-size:32px;margin-bottom:8px;}
+
+  /* ---------- Kanban ---------- */
+  .kanban{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding-bottom:8px;}
+  .kanban-col{
+    background:var(--surface-alt);
+    border-radius:var(--radius-m);
+    padding:12px;
+    flex:1 1 260px;
+    min-width:260px;
+  }
+  .kanban-col h3{
+    margin:0 0 10px;font-size:12.5px;font-weight:800;
+    display:flex;align-items:center;justify-content:space-between;
+    letter-spacing:0.02em;
+  }
+  .kanban-col h3 .count{
+    font-family:var(--font-mono);font-size:11px;
+    background:var(--surface);border-radius:999px;padding:1px 8px;
+    color:var(--ink-muted);
+  }
+  .kcard{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-s);
+    padding:10px 11px;
+    margin-bottom:8px;
+    cursor:pointer;
+    box-shadow:var(--shadow-1);
+  }
+  .kcard:hover{border-color:var(--line-strong);}
+  .kcard .k-title{font-weight:600;font-size:12.5px;margin-bottom:5px;}
+  .kcard .k-meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--ink-muted);}
+  .kcard .k-date{font-family:var(--font-mono);}
+  .kcard.overdue{border-left:3px solid var(--danger);}
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(20,30,40,0.42);
+    display:flex;align-items:center;justify-content:center;
+    z-index:100;padding:24px;
+  }
+  .modal{
+    background:var(--surface);
+    border-radius:var(--radius-l);
+    width:100%;max-width:620px;
+    max-height:88vh;overflow-y:auto;
+    box-shadow:var(--shadow-2);
+  }
+  .modal-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 22px;border-bottom:1px solid var(--line);
+    position:sticky;top:0;background:var(--surface);
+  }
+  .modal-head h2{margin:0;font-size:16px;font-weight:800;}
+  .modal-body{padding:20px 22px;}
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;font-size:11.5px;font-weight:700;color:var(--ink-muted);
+    margin-bottom:5px;letter-spacing:0.02em;
+  }
+  .field input[type=text], .field input[type=date], .field textarea, .field select{
+    width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius-s);
+    font-family:var(--font-jp);font-size:13px;color:var(--ink);outline:none;background:var(--surface);
+  }
+  .field input:focus, .field textarea:focus, .field select:focus{border-color:var(--accent);}
+  .field textarea{resize:vertical;min-height:64px;line-height:1.5;}
+  .field-row{display:flex;gap:12px;}
+  .field-row .field{flex:1;}
+  .modal-foot{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:16px 22px;border-top:1px solid var(--line);
+    position:sticky;bottom:0;background:var(--surface);
+  }
+
+  .toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;
+    font-size:12.5px;box-shadow:var(--shadow-2);
+    opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;
+    z-index:200;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+
+  .confirm-icon{
+    width:56px;height:56px;border-radius:50%;
+    background:var(--danger-soft);color:var(--danger);
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px;font-size:26px;
+  }
+  .confirm-title{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:10px;}
+  .confirm-body{font-size:14px;color:var(--ink-muted);line-height:1.6;}
+  .confirm-actions{display:flex;gap:10px;padding:22px 26px 26px;}
+  .confirm-actions .btn{flex:1;justify-content:center;font-size:14px;padding:11px 14px;}
+  .btn-danger{background:var(--danger);border-color:var(--danger);color:#fff;}
+  .btn-danger:hover{background:#9C3C32;}
+
+  ::-webkit-scrollbar{height:8px;width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:4px;}
+
+  @media (max-width:720px){
+    .header{flex-direction:column;}
+    .cell-title{max-width:150px;}
+    thead th:nth-child(1), td:nth-child(1){display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+
+<script>
+/* ============ Constants ============ */
+// ここに、Google Apps Scriptをウェブアプリとしてデプロイして発行されたURLを貼り付けてください。
+// 手順は setup_guide.md を参照してください。
+const API_URL = 'https://script.google.com/macros/s/AKfycbxvWrEo_j-oYM45UIGrG9jdiMHjyqJaxNOhZMb733C1en0kc1qYky2HCiHgTbAb2LZh/exec';
+const API_CONFIGURED = API_URL.indexOf('https://') === 0;
+const STATUS_LIST = ['進行中','保留','完了','却下'];
+const LEVELS = ['高','中','低'];
+const LEVEL_WEIGHT = {'高':3,'中':2,'低':1};
+const STATUS_ORDER_FOR_SCORE = {'進行中':0,'保留':1,'完了':2,'却下':3};
+
+let state = {
+  items: [],
+  search: '',
+  fAssignee: '',
+  fStatuses: ['進行中','保留'],
+  fUrgency: '',
+  fPriority: '',
+  sortKey: 'score',
+  sortDir: 'desc',
+  view: 'table',
+  expandedId: null,
+  lastSyncedJSON: '',
+};
+
+let modalItem = null; // item being edited/created, or null
+
+/* ============ Utilities ============ */
+function todayStr(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+function isOverdue(item){
+  if(item.ステータス === '完了' || item.ステータス === '却下') return false;
+  if(!item.期日) return false;
+  return item.期日 < todayStr();
+}
+function fmtDate(s){
+  if(!s) return '—';
+  const [y,m,d] = s.split('-');
+  return `${y}/${m}/${d}`;
+}
+function esc(s){
+  const div = document.createElement('div');
+  div.textContent = s ?? '';
+  return div.innerHTML;
+}
+function uid(){
+  return 'itm-' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+function scoreOf(item){
+  const urg = LEVEL_WEIGHT[item.緊急度] || 0;
+  const pri = LEVEL_WEIGHT[item.優先度] || 0;
+  const overdueBonus = isOverdue(item) ? 5 : 0;
+  const statusBonus = (3 - (STATUS_ORDER_FOR_SCORE[item.ステータス] ?? 0));
+  return urg + pri + overdueBonus + statusBonus*0.1;
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ============ Backend API (Google Apps Script + スプレッドシート) ============ */
+async function apiList(){
+  const res = await fetch(API_URL, { method:'GET' });
+  if(!res.ok) throw new Error('list failed: ' + res.status);
+  return await res.json();
+}
+async function apiAdd(item){
+  await fetch(API_URL, {
+    method:'POST',
+    headers:{ 'Content-Type':'text/plain;charset=utf-8' }, // text/plain でCORSプリフライトを回避
+    body: JSON.stringify({ action:'add', item })
+  });
+}
+async function apiUpdate(item){
+  await fetch(API_URL, {
+    method:'POST',
+    headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action:'update', item })
+  });
+}
+async function apiDelete(id){
+  await fetch(API_URL, {
+    method:'POST',
+    headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action:'delete', id })
+  });
+}
+
+async function initData(){
+  if(!API_CONFIGURED){
+    render(); // renders the "setup needed" banner (see render())
+    return;
+  }
+  try{
+    state.items = await apiList();
+    state.lastSyncedJSON = JSON.stringify(state.items);
+  }catch(e){
+    console.error(e);
+    showToast('スプレッドシートへの接続に失敗しました');
+  }
+  render();
+}
+async function pollApi(){
+  if(!API_CONFIGURED || modalItem) return; // 設定前・編集中は同期しない
+  try{
+    const latest = await apiList();
+    const j = JSON.stringify(latest);
+    if(j !== state.lastSyncedJSON){
+      state.items = latest;
+      state.lastSyncedJSON = j;
+      render();
+    }
+  }catch(e){ /* 次回のポーリングで再試行 */ }
+}
+
+/* ============ Derived data ============ */
+function getAssignees(){
+  return [...new Set(state.items.map(i=>i.担当者))].sort();
+}
+function filteredSorted(){
+  let list = state.items.filter(item=>{
+    if(state.search){
+      const q = state.search.toLowerCase();
+      const hay = [item['案件・提案内容'], item['詳細内容'], item.担当者, item['進捗状況コメント']].join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    if(state.fAssignee && item.担当者 !== state.fAssignee) return false;
+    if(state.fStatuses.length && !state.fStatuses.includes(item.ステータス)) return false;
+    if(state.fUrgency && item.緊急度 !== state.fUrgency) return false;
+    if(state.fPriority && item.優先度 !== state.fPriority) return false;
+    return true;
+  });
+
+  const dir = state.sortDir === 'asc' ? 1 : -1;
+  const key = state.sortKey;
+  list.sort((a,b)=>{
+    let av, bv;
+    if(key === 'score'){ av = scoreOf(a); bv = scoreOf(b); }
+    else if(key === '緊急度' || key === '優先度'){ av = LEVEL_WEIGHT[a[key]]||0; bv = LEVEL_WEIGHT[b[key]]||0; }
+    else { av = a[key] ?? ''; bv = b[key] ?? ''; }
+    if(av < bv) return -1*dir;
+    if(av > bv) return 1*dir;
+    return 0;
+  });
+  return list;
+}
+
+/* ============ Rendering ============ */
+function render(){
+  const app = document.getElementById('app');
+
+  if(!API_CONFIGURED){
+    app.innerHTML = `
+      <div class="header">
+        <div class="brand">
+          <div class="seal">総</div>
+          <div class="brand-text">
+            <h1>総務課 進捗管理</h1>
+            <p>提案・確認事項トラッカー</p>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="empty-state" style="text-align:left;padding:32px 36px;">
+          <div class="big" style="text-align:center;">⚙️</div>
+          <h3 style="margin:0 0 10px;color:var(--ink);">セットアップが必要です</h3>
+          <p style="margin:0 0 8px;">このアプリはGoogleスプレッドシートをデータの保存先として使う設計になっていますが、まだ接続先が設定されていません。</p>
+          <p style="margin:0 0 8px;"><code>setup_guide.md</code> の手順に沿ってGoogle Apps Scriptをデプロイし、発行されたURLを、このHTMLファイル内の次の行に貼り付けてください。</p>
+          <p style="margin:0;background:var(--surface-alt);padding:8px 12px;border-radius:6px;font-family:var(--font-mono);font-size:12px;">const API_URL = 'ここにあなたのウェブアプリURLを貼り付け';</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const list = filteredSorted();
+  const total = state.items.length;
+  const inProgress = state.items.filter(i=>i.ステータス==='進行中').length;
+  const overdueCount = state.items.filter(isOverdue).length;
+  const doneRate = total ? Math.round(state.items.filter(i=>i.ステータス==='完了').length / total * 100) : 0;
+  const assignees = getAssignees();
+
+  app.innerHTML = `
+    <div class="header">
+      <div class="brand">
+        <div class="seal">総</div>
+        <div class="brand-text">
+          <h1>総務課 進捗管理<span class="live-badge"><span class="live-dot"></span>スプレッドシート連携</span></h1>
+          <p>提案・確認事項トラッカー ー データはGoogleスプレッドシートに保存されています</p>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-chip"><span class="num">${total}</span><span class="lbl">全件</span></div>
+        <div class="stat-chip accent"><span class="num">${inProgress}</span><span class="lbl">進行中</span></div>
+        <div class="stat-chip danger"><span class="num">${overdueCount}</span><span class="lbl">期限超過</span></div>
+        <div class="stat-chip"><span class="num">${doneRate}%</span><span class="lbl">完了率</span></div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="searchInput" type="text" placeholder="案件名・内容・担当者を検索" value="${esc(state.search)}">
+      </div>
+      <select id="fAssignee">
+        <option value="">担当者：すべて</option>
+        ${assignees.map(a=>`<option value="${esc(a)}" ${state.fAssignee===a?'selected':''}>${esc(a)}</option>`).join('')}
+      </select>
+      <div class="status-filter-group">
+        <span class="sfg-label">ステータス</span>
+        ${STATUS_LIST.map(s=>`
+          <button class="sfg-chip sfg-${s} ${state.fStatuses.includes(s)?'active':''}" data-status="${s}">${s}</button>
+        `).join('')}
+      </div>
+      <select id="fUrgency">
+        <option value="">緊急度：すべて</option>
+        ${LEVELS.map(l=>`<option value="${l}" ${state.fUrgency===l?'selected':''}>${l}</option>`).join('')}
+      </select>
+      <select id="fPriority">
+        <option value="">優先度：すべて</option>
+        ${LEVELS.map(l=>`<option value="${l}" ${state.fPriority===l?'selected':''}>${l}</option>`).join('')}
+      </select>
+      <select id="sortSelect">
+        <option value="score" ${state.sortKey==='score'?'selected':''}>並び順：おすすめ（重要×緊急）</option>
+        <option value="期日" ${state.sortKey==='期日'?'selected':''}>並び順：期日</option>
+        <option value="発案日" ${state.sortKey==='発案日'?'selected':''}>並び順：発案日</option>
+        <option value="担当者" ${state.sortKey==='担当者'?'selected':''}>並び順：担当者</option>
+      </select>
+      <div class="spacer"></div>
+      <div class="view-toggle">
+        <button data-view="table" class="${state.view==='table'?'active':''}">▤ テーブル</button>
+        <button data-view="kanban" class="${state.view==='kanban'?'active':''}">▦ カード</button>
+      </div>
+      <button class="btn btn-primary" id="btnAdd">＋ 新規登録</button>
+    </div>
+
+    <div id="mainArea"></div>
+  `;
+
+  document.getElementById('searchInput').addEventListener('input', e=>{state.search=e.target.value; render(); document.getElementById('searchInput').focus(); document.getElementById('searchInput').setSelectionRange(state.search.length,state.search.length);});
+  document.getElementById('fAssignee').addEventListener('change', e=>{state.fAssignee=e.target.value; render();});
+  document.querySelectorAll('.sfg-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const s = chip.dataset.status;
+      const i = state.fStatuses.indexOf(s);
+      if(i >= 0){ state.fStatuses.splice(i,1); } else { state.fStatuses.push(s); }
+      render();
+    });
+  });
+  document.getElementById('fUrgency').addEventListener('change', e=>{state.fUrgency=e.target.value; render();});
+  document.getElementById('fPriority').addEventListener('change', e=>{state.fPriority=e.target.value; render();});
+  document.getElementById('sortSelect').addEventListener('change', e=>{state.sortKey=e.target.value; render();});
+  document.querySelectorAll('.view-toggle button').forEach(b=>{
+    b.addEventListener('click', ()=>{state.view=b.dataset.view; render();});
+  });
+  document.getElementById('btnAdd').addEventListener('click', ()=>openModal(null));
+
+  const mainArea = document.getElementById('mainArea');
+  if(list.length === 0){
+    mainArea.innerHTML = `<div class="table-wrap"><div class="empty-state"><div class="big">🔍</div>該当する案件がありません。検索・フィルター条件を見直してください。</div></div>`;
+    return;
+  }
+  if(state.view === 'table'){
+    mainArea.innerHTML = renderTable(list);
+    bindTableEvents(list);
+  } else {
+    mainArea.innerHTML = renderKanban(list);
+    bindKanbanEvents(list);
+  }
+}
+
+function sortArrow(key){
+  if(state.sortKey !== key) return '';
+  return state.sortDir === 'asc' ? '▲' : '▼';
+}
+
+function renderTable(list){
+  const rows = list.map(item=>{
+    const overdue = isOverdue(item);
+    const expanded = state.expandedId === item.id;
+    let html = `
+      <tr data-id="${item.id}" class="${overdue?'overdue-row':''} ${expanded?'expanded':''}">
+        <td class="cell-assignee">${esc(item.担当者)}</td>
+        <td class="cell-title">
+          <div class="t">${esc(item['案件・提案内容'])}</div>
+          <div class="sub">${esc(item['詳細内容']||'')}</div>
+        </td>
+        <td class="cell-date">
+          ${fmtDate(item.発案日)}
+        </td>
+        <td class="cell-date">
+          ${fmtDate(item.期日)}
+          ${overdue ? '<div class="overdue-tag">期限超過</div>' : ''}
+        </td>
+        <td><span class="pill pill-${item.緊急度}">${item.緊急度}</span></td>
+        <td><span class="pill pill-${item.優先度}">${item.優先度}</span></td>
+        <td><div class="stamp stamp-${item.ステータス}" title="クリックで変更先を選択">${item.ステータス}</div></td>
+        <td>
+          <div class="row-actions">
+            <button class="btn btn-ghost btn-icon btn-edit" title="編集">✎</button>
+            <button class="btn btn-ghost btn-icon btn-delete" title="削除">🗑</button>
+          </div>
+        </td>
+      </tr>`;
+    if(expanded){
+      html += `
+      <tr class="detail-row"><td colspan="8">
+        <div class="detail-grid">
+          <div class="detail-block">
+            <h4>詳細内容</h4>
+            <p class="${!item['詳細内容']?'empty':''}">${esc(item['詳細内容']) || '（詳細内容なし）'}</p>
+          </div>
+          <div class="detail-block">
+            <h4>進捗状況コメント</h4>
+            <p class="${!item['進捗状況コメント']?'empty':''}">${esc(item['進捗状況コメント']) || '（コメントなし）'}</p>
+          </div>
+        </div>
+        <div class="detail-actions">
+          <button class="btn btn-sm btn-edit-detail">編集する</button>
+          <button class="btn btn-sm btn-ghost btn-close-detail">閉じる</button>
+        </div>
+      </td></tr>`;
+    }
+    return html;
+  }).join('');
+
+  return `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-key="担当者" class="${state.sortKey==='担当者'?'sorted':''}">担当者 <span class="arrow">${sortArrow('担当者')}</span></th>
+            <th class="no-sort">案件・提案内容</th>
+            <th data-key="発案日" class="${state.sortKey==='発案日'?'sorted':''}">発案日 <span class="arrow">${sortArrow('発案日')}</span></th>
+            <th data-key="期日" class="${state.sortKey==='期日'?'sorted':''}">期日 <span class="arrow">${sortArrow('期日')}</span></th>
+            <th data-key="緊急度" class="${state.sortKey==='緊急度'?'sorted':''}">緊急度 <span class="arrow">${sortArrow('緊急度')}</span></th>
+            <th data-key="優先度" class="${state.sortKey==='優先度'?'sorted':''}">優先度 <span class="arrow">${sortArrow('優先度')}</span></th>
+            <th data-key="ステータス" class="${state.sortKey==='ステータス'?'sorted':''}">ステータス <span class="arrow">${sortArrow('ステータス')}</span></th>
+            <th class="no-sort">操作</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function bindTableEvents(list){
+  document.querySelectorAll('thead th[data-key]').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.key;
+      if(state.sortKey === key){
+        state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        state.sortKey = key;
+        state.sortDir = 'asc';
+      }
+      render();
+    });
+  });
+  document.querySelectorAll('tbody tr[data-id]').forEach(tr=>{
+    tr.addEventListener('click', (e)=>{
+      if(e.target.closest('.btn') || e.target.closest('.stamp')) return;
+      const id = tr.dataset.id;
+      state.expandedId = state.expandedId === id ? null : id;
+      render();
+    });
+  });
+  document.querySelectorAll('.btn-edit').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const id = e.target.closest('tr').dataset.id;
+      openModal(state.items.find(i=>i.id===id));
+    });
+  });
+  document.querySelectorAll('.btn-edit-detail').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      openModal(state.items.find(i=>i.id===state.expandedId));
+    });
+  });
+  document.querySelectorAll('.btn-close-detail').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      state.expandedId = null;
+      render();
+    });
+  });
+  document.querySelectorAll('.btn-delete').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const id = e.target.closest('tr').dataset.id;
+      const item = state.items.find(i=>i.id===id);
+      const ok = await confirmDialog('この案件を削除しますか？', `「${item['案件・提案内容']}」を削除します。この操作は取り消せません。`);
+      if(ok){
+        try{
+          await apiDelete(id);
+          state.items = state.items.filter(i=>i.id!==id);
+          state.lastSyncedJSON = JSON.stringify(state.items);
+          showToast('削除しました');
+        }catch(err){
+          showToast('削除に失敗しました。通信環境をご確認ください');
+        }
+        render();
+      }
+    });
+  });
+  document.querySelectorAll('.stamp').forEach(st=>{
+    st.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const tr = e.target.closest('tr');
+      const id = tr.dataset.id;
+      openStatusMenu(st, id);
+    });
+  });
+}
+
+function renderKanban(list){
+  const cols = STATUS_LIST.map(status=>{
+    const items = list.filter(i=>i.ステータス===status).sort((a,b)=> (a.期日||'') < (b.期日||'') ? -1 : 1);
+    const cards = items.map(item=>{
+      const overdue = isOverdue(item);
+      return `
+        <div class="kcard ${overdue?'overdue':''}" data-id="${item.id}">
+          <div class="k-title">${esc(item['案件・提案内容'])}</div>
+          <div class="k-meta">
+            <span>${esc(item.担当者)}</span>
+            <span class="k-date">${fmtDate(item.期日)}</span>
+          </div>
+        </div>`;
+    }).join('');
+    return `
+      <div class="kanban-col">
+        <h3>${status}<span class="count">${items.length}</span></h3>
+        ${cards || '<p style="color:var(--ink-faint);font-size:12px;">案件なし</p>'}
+      </div>`;
+  }).join('');
+  return `<div class="kanban">${cols}</div>`;
+}
+
+function bindKanbanEvents(list){
+  document.querySelectorAll('.kcard').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      openModal(state.items.find(i=>i.id===card.dataset.id));
+    });
+  });
+}
+
+/* ============ Status picker menu ============ */
+function closeStatusMenu(){
+  const existing = document.getElementById('statusMenu');
+  if(existing) existing.remove();
+  document.removeEventListener('click', closeStatusMenu, true);
+  window.removeEventListener('scroll', closeStatusMenu, true);
+}
+function openStatusMenu(anchorEl, itemId){
+  closeStatusMenu();
+  const item = state.items.find(i=>i.id===itemId);
+  const rect = anchorEl.getBoundingClientRect();
+  const menu = document.createElement('div');
+  menu.className = 'status-menu';
+  menu.id = 'statusMenu';
+  menu.innerHTML = STATUS_LIST.map(s=>`
+    <div class="sm-item ${s===item.ステータス?'current':''}" data-status="${s}">
+      <span class="sm-dot stamp-${s}"></span>${s}
+    </div>`).join('');
+  document.body.appendChild(menu);
+
+  // position (flip upward if it would overflow the viewport bottom)
+  const menuHeight = menu.offsetHeight;
+  const spaceBelow = window.innerHeight - rect.bottom;
+  let top = spaceBelow >= menuHeight + 8 ? rect.bottom + 6 : rect.top - menuHeight - 6;
+  let left = Math.min(rect.left, window.innerWidth - menu.offsetWidth - 12);
+  menu.style.top = `${Math.max(8, top)}px`;
+  menu.style.left = `${Math.max(8, left)}px`;
+
+  menu.querySelectorAll('.sm-item').forEach(opt=>{
+    opt.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const newStatus = opt.dataset.status;
+      if(newStatus !== item.ステータス){
+        const prevStatus = item.ステータス;
+        item.ステータス = newStatus;
+        try{
+          await apiUpdate(item);
+          state.lastSyncedJSON = JSON.stringify(state.items);
+          showToast(`ステータスを「${newStatus}」に変更しました`);
+        }catch(err){
+          item.ステータス = prevStatus; // ロールバック
+          showToast('更新に失敗しました。通信環境をご確認ください');
+        }
+        render();
+      }
+      closeStatusMenu();
+    });
+  });
+
+  // close when clicking anywhere else, or scrolling
+  setTimeout(()=>{
+    document.addEventListener('click', closeStatusMenu, true);
+    window.addEventListener('scroll', closeStatusMenu, true);
+  }, 0);
+}
+
+/* ============ Custom confirm dialog (centered, styled) ============ */
+function confirmDialog(title, message){
+  return new Promise(resolve=>{
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:420px;text-align:center;">
+        <div style="padding:32px 28px 8px;">
+          <div class="confirm-icon">🗑</div>
+          <div class="confirm-title">${esc(title)}</div>
+          <div class="confirm-body">${esc(message)}</div>
+        </div>
+        <div class="confirm-actions">
+          <button class="btn" id="confirmCancel">キャンセル</button>
+          <button class="btn btn-danger" id="confirmOk">削除する</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const finish = (result)=>{ overlay.remove(); resolve(result); };
+    overlay.querySelector('#confirmCancel').onclick = ()=>finish(false);
+    overlay.querySelector('#confirmOk').onclick = ()=>finish(true);
+    overlay.addEventListener('mousedown', e=>{ if(e.target === overlay) finish(false); });
+  });
+}
+
+/* ============ Modal (add / edit) ============ */
+function openModal(item){
+  modalItem = item ? {...item} : {
+    id: uid(), 発案日: todayStr(), 担当者: '', '案件・提案内容': '', '詳細内容': '',
+    期日: todayStr(), 緊急度: '中', 優先度: '中', ステータス: '進行中', '進捗状況コメント': ''
+  };
+  const isNew = !item;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modalOverlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-head">
+        <h2>${isNew ? '新規登録' : '案件を編集'}</h2>
+        <button class="btn btn-ghost btn-icon" id="modalClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field-row">
+          <div class="field">
+            <label>担当者</label>
+            <select id="m_assignee_select">
+              ${isNew ? `<option value="" ${!modalItem.担当者 ? 'selected' : ''}>担当者を選択してください</option>` : ''}
+              ${getAssignees().map(a=>`<option value="${esc(a)}" ${modalItem.担当者===a?'selected':''}>${esc(a)}</option>`).join('')}
+              <option value="__other__" ${!getAssignees().includes(modalItem.担当者) && modalItem.担当者 ? 'selected' : ''}>その他（入力する）</option>
+            </select>
+            <input type="text" id="m_assignee_other" value="${esc(!getAssignees().includes(modalItem.担当者) ? modalItem.担当者 : '')}" placeholder="担当者名を入力"
+              style="margin-top:6px;display:${!getAssignees().includes(modalItem.担当者) && modalItem.担当者 ? 'block' : 'none'};">
+          </div>
+          <div class="field"><label>発案日</label><input type="date" id="m_created" value="${modalItem.発案日}"></div>
+        </div>
+        <div class="field"><label>案件・提案内容</label><input type="text" id="m_title" value="${esc(modalItem['案件・提案内容'])}" placeholder="件名を入力"></div>
+        <div class="field"><label>詳細内容</label><textarea id="m_detail">${esc(modalItem['詳細内容'])}</textarea></div>
+        <div class="field-row">
+          <div class="field"><label>期日</label><input type="date" id="m_due" value="${modalItem.期日}"></div>
+          <div class="field"><label>緊急度</label>
+            <select id="m_urgency">${LEVELS.map(l=>`<option value="${l}" ${modalItem.緊急度===l?'selected':''}>${l}</option>`).join('')}</select>
+          </div>
+          <div class="field"><label>優先度</label>
+            <select id="m_priority">${LEVELS.map(l=>`<option value="${l}" ${modalItem.優先度===l?'selected':''}>${l}</option>`).join('')}</select>
+          </div>
+        </div>
+        <div class="field"><label>ステータス</label>
+          ${isNew
+            ? `<div class="pill" style="background:var(--accent-soft);color:var(--accent-ink);padding:6px 12px;font-size:12.5px;">進行中（新規登録は自動で設定されます）</div>`
+            : `<select id="m_status">${STATUS_LIST.map(s=>`<option value="${s}" ${modalItem.ステータス===s?'selected':''}>${s}</option>`).join('')}</select>`
+          }
+        </div>
+        <div class="field"><label>進捗状況コメント</label><textarea id="m_comment">${esc(modalItem['進捗状況コメント'])}</textarea></div>
+      </div>
+      <div class="modal-foot">
+        <span></span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" id="modalCancel">キャンセル</button>
+          <button class="btn btn-primary" id="modalSave">${isNew ? '登録する' : '保存する'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById('modalClose').onclick = closeModal;
+  document.getElementById('modalCancel').onclick = closeModal;
+  overlay.addEventListener('mousedown', e=>{ if(e.target === overlay) closeModal(); });
+  const assigneeSelect = document.getElementById('m_assignee_select');
+  const assigneeOther = document.getElementById('m_assignee_other');
+  assigneeSelect.addEventListener('change', ()=>{
+    if(assigneeSelect.value === '__other__'){
+      assigneeOther.style.display = 'block';
+      assigneeOther.focus();
+    } else {
+      assigneeOther.style.display = 'none';
+    }
+  });
+  document.getElementById('modalSave').onclick = async ()=>{
+    const assignee = (assigneeSelect.value === '__other__' ? assigneeOther.value : assigneeSelect.value).trim();
+    const title = document.getElementById('m_title').value.trim();
+    if(!assignee || !title){
+      showToast('担当者と案件名は必須です');
+      return;
+    }
+    modalItem.担当者 = assignee;
+    modalItem['案件・提案内容'] = title;
+    modalItem['詳細内容'] = document.getElementById('m_detail').value;
+    modalItem.発案日 = document.getElementById('m_created').value || todayStr();
+    modalItem.期日 = document.getElementById('m_due').value || todayStr();
+    modalItem.緊急度 = document.getElementById('m_urgency').value;
+    modalItem.優先度 = document.getElementById('m_priority').value;
+    modalItem.ステータス = isNew ? '進行中' : document.getElementById('m_status').value;
+    modalItem['進捗状況コメント'] = document.getElementById('m_comment').value;
+
+    try{
+      if(isNew){
+        await apiAdd(modalItem);
+        state.items.unshift(modalItem);
+      } else {
+        await apiUpdate(modalItem);
+        const idx = state.items.findIndex(i=>i.id===modalItem.id);
+        if(idx >= 0){ state.items[idx] = modalItem; }
+      }
+      state.lastSyncedJSON = JSON.stringify(state.items);
+      closeModal();
+      showToast(isNew ? '登録しました' : '保存しました');
+    }catch(err){
+      showToast('保存に失敗しました。通信環境をご確認ください');
+      return;
+    }
+    render();
+  };
+}
+function closeModal(){
+  const overlay = document.getElementById('modalOverlay');
+  if(overlay) overlay.remove();
+  modalItem = null;
+}
+
+/* ============ Boot ============ */
+initData();
+setInterval(pollApi, 5000);
+</script>
+</body>
+</html>
