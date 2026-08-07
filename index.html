@@ -1,8 +1,4 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>総務課 進捗管理</title>
 <style>
   :root{
@@ -605,8 +601,17 @@ async function pollApi(){
 }
 
 /* ============ Derived data ============ */
+const ASSIGNEE_ORDER = ['中原 俊和', '平沢 ゆかり', '舘前 流星', 'ドーン 真菜', '中原 ﾏﾘｶﾞｰ ｻﾝﾁｪｽ'];
 function getAssignees(){
-  return [...new Set(state.items.map(i=>i.担当者))].sort();
+  const names = [...new Set(state.items.map(i=>i.担当者))];
+  return names.sort((a, b)=>{
+    const ia = ASSIGNEE_ORDER.indexOf(a);
+    const ib = ASSIGNEE_ORDER.indexOf(b);
+    if(ia !== -1 && ib !== -1) return ia - ib;
+    if(ia !== -1) return -1; // 既知の担当者を先に
+    if(ib !== -1) return 1;
+    return a.localeCompare(b, 'ja'); // 未知の担当者は50音順で後ろに
+  });
 }
 function filteredSorted(){
   let list = state.items.filter(item=>{
