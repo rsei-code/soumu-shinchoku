@@ -1099,9 +1099,9 @@ function openModal(item){
     </div>
   `;
   document.body.appendChild(overlay);
-  document.getElementById('modalClose').onclick = closeModal;
-  document.getElementById('modalCancel').onclick = closeModal;
-  overlay.addEventListener('mousedown', e=>{ if(e.target === overlay) closeModal(); });
+  document.getElementById('modalClose').onclick = ()=>{ if(!document.getElementById('modalSave').disabled) closeModal(); };
+  document.getElementById('modalCancel').onclick = ()=>{ if(!document.getElementById('modalSave').disabled) closeModal(); };
+  overlay.addEventListener('mousedown', e=>{ if(e.target === overlay && !document.getElementById('modalSave').disabled) closeModal(); });
   const assigneeSelect = document.getElementById('m_assignee_select');
   const assigneeOther = document.getElementById('m_assignee_other');
   assigneeSelect.addEventListener('change', ()=>{
@@ -1113,6 +1113,9 @@ function openModal(item){
     }
   });
   document.getElementById('modalSave').onclick = async ()=>{
+    const saveBtn = document.getElementById('modalSave');
+    if(saveBtn.disabled) return; // 連打による二重登録を防ぐ
+
     const assignee = (assigneeSelect.value === '__other__' ? assigneeOther.value : assigneeSelect.value).trim();
     const title = document.getElementById('m_title').value.trim();
     if(!assignee || !title){
@@ -1129,6 +1132,13 @@ function openModal(item){
     modalItem.ステータス = isNew ? '進行中' : document.getElementById('m_status').value;
     modalItem['進捗状況コメント'] = document.getElementById('m_comment').value;
 
+    const originalLabel = saveBtn.textContent;
+    saveBtn.disabled = true;
+    saveBtn.style.opacity = '0.7';
+    saveBtn.style.cursor = 'not-allowed';
+    saveBtn.textContent = isNew ? '登録中…' : '保存中…';
+    document.getElementById('modalCancel').disabled = true;
+
     try{
       if(isNew){
         await apiAdd(modalItem);
@@ -1143,6 +1153,11 @@ function openModal(item){
       showToast(isNew ? '登録しました' : '保存しました');
     }catch(err){
       showToast('保存に失敗しました。通信環境をご確認ください');
+      saveBtn.disabled = false;
+      saveBtn.style.opacity = '';
+      saveBtn.style.cursor = '';
+      saveBtn.textContent = originalLabel;
+      document.getElementById('modalCancel').disabled = false;
       return;
     }
     render();
