@@ -1,4 +1,8 @@
-
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>総務課 進捗管理</title>
 <style>
   :root{
@@ -734,7 +738,7 @@ function render(){
         ${LEVELS.map(l=>`<option value="${l}" ${state.fUrgency===l?'selected':''}>${l}</option>`).join('')}
       </select>
       <select id="fPriority">
-        <option value="">優先度：すべて</option>
+        <option value="">重要度：すべて</option>
         ${LEVELS.map(l=>`<option value="${l}" ${state.fPriority===l?'selected':''}>${l}</option>`).join('')}
       </select>
       <select id="sortSelect">
@@ -851,7 +855,7 @@ function renderTable(list){
             <th data-key="発案日" class="${state.sortKey==='発案日'?'sorted':''}">発案日 <span class="arrow">${sortArrow('発案日')}</span></th>
             <th data-key="期日" class="${state.sortKey==='期日'?'sorted':''}">期日 <span class="arrow">${sortArrow('期日')}</span></th>
             <th data-key="緊急度" class="${state.sortKey==='緊急度'?'sorted':''}">緊急度 <span class="arrow">${sortArrow('緊急度')}</span></th>
-            <th data-key="優先度" class="${state.sortKey==='優先度'?'sorted':''}">優先度 <span class="arrow">${sortArrow('優先度')}</span></th>
+            <th data-key="優先度" class="${state.sortKey==='優先度'?'sorted':''}">重要度 <span class="arrow">${sortArrow('優先度')}</span></th>
             <th data-key="ステータス" class="${state.sortKey==='ステータス'?'sorted':''}">ステータス <span class="arrow">${sortArrow('ステータス')}</span></th>
             <th class="no-sort">操作</th>
           </tr>
@@ -1082,7 +1086,7 @@ function openModal(item){
           <div class="field"><label>緊急度</label>
             <select id="m_urgency">${LEVELS.map(l=>`<option value="${l}" ${modalItem.緊急度===l?'selected':''}>${l}</option>`).join('')}</select>
           </div>
-          <div class="field"><label>優先度</label>
+          <div class="field"><label>重要度</label>
             <select id="m_priority">${LEVELS.map(l=>`<option value="${l}" ${modalItem.優先度===l?'selected':''}>${l}</option>`).join('')}</select>
           </div>
         </div>
