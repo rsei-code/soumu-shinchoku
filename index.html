@@ -95,32 +95,6 @@
     100%{box-shadow:0 0 0 0 rgba(46,125,83,0);}
   }
 
-  .stats-row{display:flex;gap:10px;flex-wrap:wrap;}
-  .stat-chip{
-    background:var(--surface);
-    border:1px solid var(--line);
-    border-radius:var(--radius-m);
-    padding:9px 16px;
-    min-width:88px;
-    text-align:center;
-    box-shadow:var(--shadow-1);
-  }
-  .stat-chip .num{
-    font-family:var(--font-mono);
-    font-size:20px;
-    font-weight:700;
-    color:var(--ink);
-    display:block;
-    line-height:1.1;
-  }
-  .stat-chip.danger .num{color:var(--danger);}
-  .stat-chip.accent .num{color:var(--accent);}
-  .stat-chip .lbl{
-    font-size:10.5px;
-    color:var(--ink-muted);
-    letter-spacing:0.03em;
-  }
-
   /* ---------- Toolbar ---------- */
   .toolbar{
     display:flex;
@@ -189,19 +163,6 @@
   }
   select:hover{border-color:var(--line-strong);}
 
-  .spacer{flex:1;}
-
-  .view-toggle{
-    display:flex;border:1px solid var(--line);border-radius:var(--radius-s);overflow:hidden;
-  }
-  .view-toggle button{
-    border:none;background:var(--surface);
-    padding:7px 13px;font-size:12.5px;color:var(--ink-muted);
-    cursor:pointer;font-family:var(--font-jp);font-weight:600;
-    display:flex;align-items:center;gap:5px;
-  }
-  .view-toggle button.active{background:var(--accent);color:#fff;}
-  .view-toggle button:not(.active):hover{background:var(--surface-alt);}
 
   .btn{
     border:1px solid var(--line);
@@ -278,9 +239,6 @@
     letter-spacing:0.02em;
     white-space:nowrap;
   }
-  .pill-高{background:var(--danger-soft);color:var(--danger);}
-  .pill-中{background:var(--warn-soft);color:var(--warn);}
-  .pill-低{background:var(--surface-alt);color:var(--ink-muted);}
 
   /* stamp-style status chip */
   .stamp{
@@ -359,40 +317,6 @@
     text-align:center;padding:60px 20px;color:var(--ink-muted);
   }
   .empty-state .big{font-size:32px;margin-bottom:8px;}
-
-  /* ---------- Kanban ---------- */
-  .kanban{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding-bottom:8px;}
-  .kanban-col{
-    background:var(--surface-alt);
-    border-radius:var(--radius-m);
-    padding:12px;
-    flex:1 1 260px;
-    min-width:260px;
-  }
-  .kanban-col h3{
-    margin:0 0 10px;font-size:12.5px;font-weight:800;
-    display:flex;align-items:center;justify-content:space-between;
-    letter-spacing:0.02em;
-  }
-  .kanban-col h3 .count{
-    font-family:var(--font-mono);font-size:11px;
-    background:var(--surface);border-radius:999px;padding:1px 8px;
-    color:var(--ink-muted);
-  }
-  .kcard{
-    background:var(--surface);
-    border:1px solid var(--line);
-    border-radius:var(--radius-s);
-    padding:10px 11px;
-    margin-bottom:8px;
-    cursor:pointer;
-    box-shadow:var(--shadow-1);
-  }
-  .kcard:hover{border-color:var(--line-strong);}
-  .kcard .k-title{font-weight:600;font-size:12.5px;margin-bottom:5px;}
-  .kcard .k-meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--ink-muted);}
-  .kcard .k-date{font-family:var(--font-mono);}
-  .kcard.overdue{border-left:3px solid var(--danger);}
 
   /* ---------- Modal ---------- */
   .modal-overlay{
@@ -488,8 +412,6 @@ const LOGO_SRC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUcAAABICAYAAABl
 const API_URL = 'https://script.google.com/macros/s/AKfycbxvWrEo_j-oYM45UIGrG9jdiMHjyqJaxNOhZMb733C1en0kc1qYky2HCiHgTbAb2LZh/exec';
 const API_CONFIGURED = API_URL.indexOf('https://') === 0;
 const STATUS_LIST = ['進行中','保留','完了','却下'];
-const LEVELS = ['高','中','低'];
-const LEVEL_WEIGHT = {'高':3,'中':2,'低':1};
 const STATUS_ORDER_FOR_SCORE = {'進行中':0,'保留':1,'完了':2,'却下':3};
 
 let state = {
@@ -497,11 +419,8 @@ let state = {
   search: '',
   fAssignee: '',
   fStatuses: ['進行中','保留'],
-  fUrgency: '',
-  fPriority: '',
   sortKey: 'score',
   sortDir: 'desc',
-  view: 'table',
   expandedId: null,
   lastSyncedJSON: '',
   loading: true,
@@ -532,12 +451,16 @@ function esc(s){
 function uid(){
   return 'itm-' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 }
-function scoreOf(item){
-  const urg = LEVEL_WEIGHT[item.緊急度] || 0;
-  const pri = LEVEL_WEIGHT[item.優先度] || 0;
-  const overdueBonus = isOverdue(item) ? 5 : 0;
-  const statusBonus = (3 - (STATUS_ORDER_FOR_SCORE[item.ステータス] ?? 0));
-  return urg + pri + overdueBonus + statusBonus*0.1;
+// おすすめ順：①期限超過を先頭 ②ステータス（進行中→保留→完了→却下） ③期日の近い順（期日なしは後ろ）
+function compareRecommended(a, b){
+  const oa = isOverdue(a) ? 0 : 1, ob = isOverdue(b) ? 0 : 1;
+  if(oa !== ob) return oa - ob;
+  const sa = STATUS_ORDER_FOR_SCORE[a.ステータス] ?? 9, sb = STATUS_ORDER_FOR_SCORE[b.ステータス] ?? 9;
+  if(sa !== sb) return sa - sb;
+  const da = a.期日 || '9999-99-99', db = b.期日 || '9999-99-99';
+  if(da < db) return -1;
+  if(da > db) return 1;
+  return 0;
 }
 function showToast(msg){
   const t = document.getElementById('toast');
@@ -626,18 +549,14 @@ function filteredSorted(){
     }
     if(state.fAssignee && item.担当者 !== state.fAssignee) return false;
     if(state.fStatuses.length && !state.fStatuses.includes(item.ステータス)) return false;
-    if(state.fUrgency && item.緊急度 !== state.fUrgency) return false;
-    if(state.fPriority && item.優先度 !== state.fPriority) return false;
     return true;
   });
 
   const dir = state.sortDir === 'asc' ? 1 : -1;
   const key = state.sortKey;
   list.sort((a,b)=>{
-    let av, bv;
-    if(key === 'score'){ av = scoreOf(a); bv = scoreOf(b); }
-    else if(key === '緊急度' || key === '優先度'){ av = LEVEL_WEIGHT[a[key]]||0; bv = LEVEL_WEIGHT[b[key]]||0; }
-    else { av = a[key] ?? ''; bv = b[key] ?? ''; }
+    if(key === 'score') return compareRecommended(a, b); // おすすめ順は向きを固定
+    const av = a[key] ?? '', bv = b[key] ?? '';
     if(av < bv) return -1*dir;
     if(av > bv) return 1*dir;
     return 0;
@@ -695,10 +614,6 @@ function render(){
   }
 
   const list = filteredSorted();
-  const total = state.items.length;
-  const inProgress = state.items.filter(i=>i.ステータス==='進行中').length;
-  const overdueCount = state.items.filter(isOverdue).length;
-  const doneRate = total ? Math.round(state.items.filter(i=>i.ステータス==='完了').length / total * 100) : 0;
   const assignees = getAssignees();
 
   app.innerHTML = `
@@ -710,15 +625,10 @@ function render(){
           <p>提案・確認事項トラッカー ー データはGoogleスプレッドシートに保存されています</p>
         </div>
       </div>
-      <div class="stats-row">
-        <div class="stat-chip"><span class="num">${total}</span><span class="lbl">全件</span></div>
-        <div class="stat-chip accent"><span class="num">${inProgress}</span><span class="lbl">進行中</span></div>
-        <div class="stat-chip danger"><span class="num">${overdueCount}</span><span class="lbl">期限超過</span></div>
-        <div class="stat-chip"><span class="num">${doneRate}%</span><span class="lbl">完了率</span></div>
-      </div>
     </div>
 
     <div class="toolbar">
+      <button class="btn btn-primary" id="btnAdd">＋ 新規登録</button>
       <div class="search-box">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input id="searchInput" type="text" placeholder="案件名・内容・担当者を検索" value="${esc(state.search)}">
@@ -733,26 +643,12 @@ function render(){
           <button class="sfg-chip sfg-${s} ${state.fStatuses.includes(s)?'active':''}" data-status="${s}">${s}</button>
         `).join('')}
       </div>
-      <select id="fUrgency">
-        <option value="">緊急度：すべて</option>
-        ${LEVELS.map(l=>`<option value="${l}" ${state.fUrgency===l?'selected':''}>${l}</option>`).join('')}
-      </select>
-      <select id="fPriority">
-        <option value="">重要度：すべて</option>
-        ${LEVELS.map(l=>`<option value="${l}" ${state.fPriority===l?'selected':''}>${l}</option>`).join('')}
-      </select>
       <select id="sortSelect">
-        <option value="score" ${state.sortKey==='score'?'selected':''}>並び順：おすすめ（重要×緊急）</option>
+        <option value="score" ${state.sortKey==='score'?'selected':''}>並び順：おすすめ（期限超過・期日順）</option>
         <option value="期日" ${state.sortKey==='期日'?'selected':''}>並び順：期日</option>
         <option value="発案日" ${state.sortKey==='発案日'?'selected':''}>並び順：発案日</option>
         <option value="担当者" ${state.sortKey==='担当者'?'selected':''}>並び順：担当者</option>
       </select>
-      <div class="spacer"></div>
-      <div class="view-toggle">
-        <button data-view="table" class="${state.view==='table'?'active':''}">▤ テーブル</button>
-        <button data-view="kanban" class="${state.view==='kanban'?'active':''}">▦ カード</button>
-      </div>
-      <button class="btn btn-primary" id="btnAdd">＋ 新規登録</button>
     </div>
 
     <div id="mainArea"></div>
@@ -768,12 +664,7 @@ function render(){
       render();
     });
   });
-  document.getElementById('fUrgency').addEventListener('change', e=>{state.fUrgency=e.target.value; render();});
-  document.getElementById('fPriority').addEventListener('change', e=>{state.fPriority=e.target.value; render();});
   document.getElementById('sortSelect').addEventListener('change', e=>{state.sortKey=e.target.value; render();});
-  document.querySelectorAll('.view-toggle button').forEach(b=>{
-    b.addEventListener('click', ()=>{state.view=b.dataset.view; render();});
-  });
   document.getElementById('btnAdd').addEventListener('click', ()=>openModal(null));
 
   const mainArea = document.getElementById('mainArea');
@@ -781,13 +672,8 @@ function render(){
     mainArea.innerHTML = `<div class="table-wrap"><div class="empty-state"><div class="big">🔍</div>該当する案件がありません。検索・フィルター条件を見直してください。</div></div>`;
     return;
   }
-  if(state.view === 'table'){
-    mainArea.innerHTML = renderTable(list);
-    bindTableEvents(list);
-  } else {
-    mainArea.innerHTML = renderKanban(list);
-    bindKanbanEvents(list);
-  }
+  mainArea.innerHTML = renderTable(list);
+  bindTableEvents(list);
 }
 
 function sortArrow(key){
@@ -813,8 +699,6 @@ function renderTable(list){
           ${fmtDate(item.期日)}
           ${overdue ? '<div class="overdue-tag">期限超過</div>' : ''}
         </td>
-        <td><span class="pill pill-${item.緊急度}">${item.緊急度}</span></td>
-        <td><span class="pill pill-${item.優先度}">${item.優先度}</span></td>
         <td><div class="stamp stamp-${item.ステータス}" title="クリックで変更先を選択">${item.ステータス}</div></td>
         <td>
           <div class="row-actions">
@@ -825,7 +709,7 @@ function renderTable(list){
       </tr>`;
     if(expanded){
       html += `
-      <tr class="detail-row"><td colspan="8">
+      <tr class="detail-row"><td colspan="6">
         <div class="detail-grid">
           <div class="detail-block">
             <h4>詳細内容</h4>
@@ -854,8 +738,6 @@ function renderTable(list){
             <th class="no-sort">案件・提案内容</th>
             <th data-key="発案日" class="${state.sortKey==='発案日'?'sorted':''}">発案日 <span class="arrow">${sortArrow('発案日')}</span></th>
             <th data-key="期日" class="${state.sortKey==='期日'?'sorted':''}">期日 <span class="arrow">${sortArrow('期日')}</span></th>
-            <th data-key="緊急度" class="${state.sortKey==='緊急度'?'sorted':''}">緊急度 <span class="arrow">${sortArrow('緊急度')}</span></th>
-            <th data-key="優先度" class="${state.sortKey==='優先度'?'sorted':''}">重要度 <span class="arrow">${sortArrow('優先度')}</span></th>
             <th data-key="ステータス" class="${state.sortKey==='ステータス'?'sorted':''}">ステータス <span class="arrow">${sortArrow('ステータス')}</span></th>
             <th class="no-sort">操作</th>
           </tr>
@@ -932,37 +814,6 @@ function bindTableEvents(list){
       const tr = e.target.closest('tr');
       const id = tr.dataset.id;
       openStatusMenu(st, id);
-    });
-  });
-}
-
-function renderKanban(list){
-  const cols = STATUS_LIST.map(status=>{
-    const items = list.filter(i=>i.ステータス===status).sort((a,b)=> (a.期日||'') < (b.期日||'') ? -1 : 1);
-    const cards = items.map(item=>{
-      const overdue = isOverdue(item);
-      return `
-        <div class="kcard ${overdue?'overdue':''}" data-id="${item.id}">
-          <div class="k-title">${esc(item['案件・提案内容'])}</div>
-          <div class="k-meta">
-            <span>${esc(item.担当者)}</span>
-            <span class="k-date">${fmtDate(item.期日)}</span>
-          </div>
-        </div>`;
-    }).join('');
-    return `
-      <div class="kanban-col">
-        <h3>${status}<span class="count">${items.length}</span></h3>
-        ${cards || '<p style="color:var(--ink-faint);font-size:12px;">案件なし</p>'}
-      </div>`;
-  }).join('');
-  return `<div class="kanban">${cols}</div>`;
-}
-
-function bindKanbanEvents(list){
-  document.querySelectorAll('.kcard').forEach(card=>{
-    card.addEventListener('click', ()=>{
-      openModal(state.items.find(i=>i.id===card.dataset.id));
     });
   });
 }
@@ -1053,7 +904,7 @@ function confirmDialog(title, message){
 function openModal(item){
   modalItem = item ? {...item} : {
     id: uid(), 発案日: todayStr(), 担当者: '', '案件・提案内容': '', '詳細内容': '',
-    期日: todayStr(), 緊急度: '中', 優先度: '中', ステータス: '進行中', '進捗状況コメント': ''
+    期日: todayStr(), ステータス: '進行中', '進捗状況コメント': ''
   };
   const isNew = !item;
   const overlay = document.createElement('div');
@@ -1083,18 +934,12 @@ function openModal(item){
         <div class="field"><label>詳細内容</label><textarea id="m_detail">${esc(modalItem['詳細内容'])}</textarea></div>
         <div class="field-row">
           <div class="field"><label>期日</label><input type="date" id="m_due" value="${modalItem.期日}"></div>
-          <div class="field"><label>緊急度</label>
-            <select id="m_urgency">${LEVELS.map(l=>`<option value="${l}" ${modalItem.緊急度===l?'selected':''}>${l}</option>`).join('')}</select>
+          <div class="field"><label>ステータス</label>
+            ${isNew
+              ? `<div class="pill" style="background:var(--accent-soft);color:var(--accent-ink);padding:6px 12px;font-size:12.5px;">進行中（新規登録は自動で設定されます）</div>`
+              : `<select id="m_status">${STATUS_LIST.map(s=>`<option value="${s}" ${modalItem.ステータス===s?'selected':''}>${s}</option>`).join('')}</select>`
+            }
           </div>
-          <div class="field"><label>重要度</label>
-            <select id="m_priority">${LEVELS.map(l=>`<option value="${l}" ${modalItem.優先度===l?'selected':''}>${l}</option>`).join('')}</select>
-          </div>
-        </div>
-        <div class="field"><label>ステータス</label>
-          ${isNew
-            ? `<div class="pill" style="background:var(--accent-soft);color:var(--accent-ink);padding:6px 12px;font-size:12.5px;">進行中（新規登録は自動で設定されます）</div>`
-            : `<select id="m_status">${STATUS_LIST.map(s=>`<option value="${s}" ${modalItem.ステータス===s?'selected':''}>${s}</option>`).join('')}</select>`
-          }
         </div>
         <div class="field"><label>進捗状況コメント</label><textarea id="m_comment">${esc(modalItem['進捗状況コメント'])}</textarea></div>
       </div>
@@ -1136,8 +981,8 @@ function openModal(item){
     modalItem['詳細内容'] = document.getElementById('m_detail').value;
     modalItem.発案日 = document.getElementById('m_created').value || todayStr();
     modalItem.期日 = document.getElementById('m_due').value || todayStr();
-    modalItem.緊急度 = document.getElementById('m_urgency').value;
-    modalItem.優先度 = document.getElementById('m_priority').value;
+    delete modalItem.緊急度; // 旧項目（シートに残っていても送信しない）
+    delete modalItem.優先度;
     modalItem.ステータス = isNew ? '進行中' : document.getElementById('m_status').value;
     modalItem['進捗状況コメント'] = document.getElementById('m_comment').value;
 
