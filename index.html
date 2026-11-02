@@ -50,7 +50,7 @@
   /* ---------- Header ---------- */
   .header{
     display:flex;
-    align-items:flex-start;
+    align-items:center;
     justify-content:space-between;
     gap:24px;
     margin-bottom:22px;
@@ -95,32 +95,69 @@
     100%{box-shadow:0 0 0 0 rgba(46,125,83,0);}
   }
 
+  /* ---------- Quote ---------- */
+  .quote{
+    position:relative;
+    margin:0 0 18px;
+    padding:12px 24px;
+    background:linear-gradient(135deg, var(--accent-soft) 0%, var(--surface) 75%);
+    border:2px solid var(--accent);
+    border-radius:var(--radius-l);
+    box-shadow:0 0 0 4px var(--accent-soft), var(--shadow-1);
+    display:flex;align-items:center;justify-content:space-between;gap:14px 32px;flex-wrap:wrap;
+    overflow:hidden;
+  }
+  .quote-text{margin:0;}
+  .quote-en{
+    font-family:Georgia,"Times New Roman",serif;
+    font-style:italic;font-weight:700;font-size:24px;color:var(--accent-ink);line-height:1.25;
+  }
+  .quote-ja{
+    font-size:18px;font-weight:800;color:var(--ink);margin-top:2px;letter-spacing:0.04em;
+    text-align:center; /* 英文の幅の中央に配置 */
+  }
+  .quote-by{
+    font-size:12.5px;color:var(--ink-muted);text-align:right;line-height:1.5;
+    padding-left:20px;border-left:2px solid var(--accent-soft-strong);
+  }
+  .quote-by strong{color:var(--ink);font-weight:700;}
+  @media (max-width:720px){
+    .quote{padding:12px 16px;}
+    .quote-en{font-size:19px;}
+    .quote-ja{font-size:15px;}
+    .quote-by{text-align:left;padding-left:0;border-left:none;}
+  }
+
   /* ---------- Summary counts ---------- */
   .summary{
     display:grid;
-    grid-template-columns:repeat(3, minmax(0,1fr));
-    gap:12px;
-    margin-bottom:16px;
+    grid-template-columns:repeat(3, auto);
+    gap:10px;
   }
   .sum-card{
     background:var(--surface);
     border:1px solid var(--line);
     border-left:4px solid var(--c);
     border-radius:var(--radius-m);
-    padding:12px 16px;
+    padding:8px 14px;
     box-shadow:var(--shadow-1);
-    display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
   }
-  .sum-label{font-size:12.5px;font-weight:700;color:var(--ink-muted);}
-  .sum-label small{display:block;font-size:11px;font-weight:500;color:var(--ink-faint);margin-top:1px;}
-  .sum-num{font-size:28px;font-weight:800;color:var(--c);line-height:1.1;font-variant-numeric:tabular-nums;}
-  .sum-num span{font-size:13px;font-weight:700;margin-left:2px;color:var(--ink-muted);}
+  .sum-label{font-size:12.5px;font-weight:700;color:var(--ink);}
+  .sum-label small{display:block;font-size:10.5px;font-weight:500;color:var(--ink-faint);margin-top:1px;}
+  .sum-num{font-size:28px;font-weight:900;color:var(--c);line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;}
+  .sum-num span{font-size:12px;font-weight:700;margin-left:3px;color:var(--ink-muted);}
   .sum-progress{--c:var(--accent);}
   .sum-hold{--c:var(--hold);}
   .sum-stale{--c:var(--danger);}
-  .sum-stale.zero{--c:var(--ink-faint);}
+  .sum-stale{background:var(--danger-soft);border-color:#E9C4BE;border-left-color:var(--danger);}
+  .sum-stale .sum-label{color:var(--danger);}
+  .sum-stale .sum-num span{color:var(--danger);}
+  .sum-stale.zero{--c:var(--ink-faint);background:var(--surface);border-color:var(--line);border-left-color:var(--ink-faint);}
+  .sum-stale.zero .sum-label{color:var(--ink);}
+  .sum-stale.zero .sum-num span{color:var(--ink-muted);}
   @media (max-width:720px){
-    .summary{grid-template-columns:1fr;}
+    .summary{grid-template-columns:1fr;width:100%;}
   }
 
   /* ---------- Toolbar ---------- */
@@ -420,7 +457,7 @@
   ::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:4px;}
 
   @media (max-width:720px){
-    .header{flex-direction:column;}
+    .header{flex-direction:column;align-items:stretch;}
     .cell-title{max-width:150px;}
     thead th:nth-child(1), td:nth-child(1){display:none;}
   }
@@ -555,11 +592,26 @@ async function pollApi(){
   }catch(e){ /* 次回のポーリングで再試行 */ }
 }
 
+/* ============ Quote ============ */
+function renderQuote(){
+  return `
+    <figure class="quote">
+      <blockquote class="quote-text">
+        <div class="quote-en">“Procrastination is the thief of time.”</div>
+        <div class="quote-ja">「先延ばしは時間泥棒である。」</div>
+      </blockquote>
+      <figcaption class="quote-by">
+        <strong>エドワード・ヤング（Edward Young）</strong><br>
+        イギリスの詩人・劇作家（1683〜1765年）
+      </figcaption>
+    </figure>`;
+}
+
 /* ============ Summary counts ============ */
-// 発案日から1カ月が過ぎているか（例：4/15発案 → 5/16以降が「超過」）
+// 期日から1カ月が過ぎているか（例：4/15期日 → 5/16以降が「超過」）
 function isOverOneMonth(item){
-  if(!item.発案日) return false;
-  const [y,m,d] = String(item.発案日).slice(0,10).split('-').map(Number);
+  if(!item.期日) return false;
+  const [y,m,d] = String(item.期日).slice(0,10).split('-').map(Number);
   if(!y || !m || !d) return false;
   const limit = new Date(y, m, d); // 1カ月後の同日（月末は自動で翌月にずれる）
   const now = new Date();
@@ -587,7 +639,7 @@ function renderSummary(){
         <div class="sum-num">${c.hold}<span>件</span></div>
       </div>
       <div class="sum-card sum-stale ${c.stale===0?'zero':''}">
-        <div class="sum-label">発案日から1カ月超過<small>進行中・保留のうち</small></div>
+        <div class="sum-label">期日から1カ月超過<small>進行中・保留のうち</small></div>
         <div class="sum-num">${c.stale}<span>件</span></div>
       </div>
     </div>`;
@@ -645,6 +697,7 @@ function render(){
           </div>
         </div>
       </div>
+      ${renderQuote()}
       <div class="table-wrap">
         <div class="empty-state">
           <div class="loading-spinner"></div>
@@ -666,6 +719,7 @@ function render(){
           </div>
         </div>
       </div>
+      ${renderQuote()}
       <div class="table-wrap">
         <div class="empty-state" style="text-align:left;padding:32px 36px;">
           <div class="big" style="text-align:center;">⚙️</div>
@@ -688,12 +742,12 @@ function render(){
         <img class="logo-img" src="${LOGO_SRC}" alt="会社ロゴ">
         <div class="brand-text">
           <h1>総務課 進捗管理<span class="live-badge"><span class="live-dot"></span>スプレッドシート連携</span></h1>
-          <p>提案・確認事項トラッカー ー データはGoogleスプレッドシートに保存されています</p>
         </div>
       </div>
+      ${renderSummary()}
     </div>
 
-    ${renderSummary()}
+    ${renderQuote()}
 
     <div class="toolbar">
       <button class="btn btn-primary" id="btnAdd">＋ 新規登録</button>
