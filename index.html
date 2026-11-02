@@ -95,6 +95,34 @@
     100%{box-shadow:0 0 0 0 rgba(46,125,83,0);}
   }
 
+  /* ---------- Summary counts ---------- */
+  .summary{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0,1fr));
+    gap:12px;
+    margin-bottom:16px;
+  }
+  .sum-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-left:4px solid var(--c);
+    border-radius:var(--radius-m);
+    padding:12px 16px;
+    box-shadow:var(--shadow-1);
+    display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  }
+  .sum-label{font-size:12.5px;font-weight:700;color:var(--ink-muted);}
+  .sum-label small{display:block;font-size:11px;font-weight:500;color:var(--ink-faint);margin-top:1px;}
+  .sum-num{font-size:28px;font-weight:800;color:var(--c);line-height:1.1;font-variant-numeric:tabular-nums;}
+  .sum-num span{font-size:13px;font-weight:700;margin-left:2px;color:var(--ink-muted);}
+  .sum-progress{--c:var(--accent);}
+  .sum-hold{--c:var(--hold);}
+  .sum-stale{--c:var(--danger);}
+  .sum-stale.zero{--c:var(--ink-faint);}
+  @media (max-width:720px){
+    .summary{grid-template-columns:1fr;}
+  }
+
   /* ---------- Toolbar ---------- */
   .toolbar{
     display:flex;
@@ -527,6 +555,44 @@ async function pollApi(){
   }catch(e){ /* 次回のポーリングで再試行 */ }
 }
 
+/* ============ Summary counts ============ */
+// 発案日から1カ月が過ぎているか（例：4/15発案 → 5/16以降が「超過」）
+function isOverOneMonth(item){
+  if(!item.発案日) return false;
+  const [y,m,d] = String(item.発案日).slice(0,10).split('-').map(Number);
+  if(!y || !m || !d) return false;
+  const limit = new Date(y, m, d); // 1カ月後の同日（月末は自動で翌月にずれる）
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return today > limit;
+}
+function getSummaryCounts(){
+  const open = state.items.filter(i=>i.ステータス === '進行中' || i.ステータス === '保留');
+  return {
+    progress: state.items.filter(i=>i.ステータス === '進行中').length,
+    hold: state.items.filter(i=>i.ステータス === '保留').length,
+    stale: open.filter(isOverOneMonth).length,
+  };
+}
+function renderSummary(){
+  const c = getSummaryCounts();
+  return `
+    <div class="summary">
+      <div class="sum-card sum-progress">
+        <div class="sum-label">進行中</div>
+        <div class="sum-num">${c.progress}<span>件</span></div>
+      </div>
+      <div class="sum-card sum-hold">
+        <div class="sum-label">保留中</div>
+        <div class="sum-num">${c.hold}<span>件</span></div>
+      </div>
+      <div class="sum-card sum-stale ${c.stale===0?'zero':''}">
+        <div class="sum-label">発案日から1カ月超過<small>進行中・保留のうち</small></div>
+        <div class="sum-num">${c.stale}<span>件</span></div>
+      </div>
+    </div>`;
+}
+
 /* ============ Derived data ============ */
 const ASSIGNEE_ORDER = ['中原 俊和', '平沢 ゆかり', '舘前 流星', 'ドーン 真菜', '中原 ﾏﾘｶﾞｰ ｻﾝﾁｪｽ'];
 function getAssignees(){
@@ -626,6 +692,8 @@ function render(){
         </div>
       </div>
     </div>
+
+    ${renderSummary()}
 
     <div class="toolbar">
       <button class="btn btn-primary" id="btnAdd">＋ 新規登録</button>
@@ -1029,3 +1097,4 @@ setInterval(pollApi, 5000);
 </script>
 </body>
 </html>
+
