@@ -95,7 +95,7 @@
     100%{box-shadow:0 0 0 0 rgba(46,125,83,0);}
   }
 
-  /* ---------- Fixed top area (header + quote) ---------- */
+  /* ---------- Fixed top area (header + meetings) ---------- */
   .sticky-top{
     position:sticky;top:0;z-index:50;
     background:var(--bg);
@@ -105,44 +105,121 @@
   }
   .sticky-top.stuck{box-shadow:0 6px 12px -8px rgba(20,30,40,0.25);}
   .sticky-top .header{margin-bottom:14px;}
-  .sticky-top .quote{margin-bottom:14px;}
+  .sticky-top .meetings{margin-bottom:14px;}
   @media (max-width:720px){
     /* スマホでは固定エリアが画面の大半を占めるため固定しない */
     .sticky-top{position:static;margin:0;padding:0;}
     .sticky-top.stuck{box-shadow:none;}
   }
 
-  /* ---------- Quote ---------- */
-  .quote{
-    position:relative;
+  /* ---------- Weekly meetings ---------- */
+  .meetings{
     margin:0 0 18px;
-    padding:12px 24px;
-    background:linear-gradient(135deg, var(--accent-soft) 0%, var(--surface) 75%);
-    border:2px solid var(--accent);
+    display:grid;
+    grid-template-columns:auto 1fr auto 1fr;
+    align-items:stretch;
+    background:var(--surface);
+    border:1px solid var(--line);
     border-radius:var(--radius-l);
-    box-shadow:0 0 0 4px var(--accent-soft), var(--shadow-1);
-    display:flex;align-items:center;justify-content:space-between;gap:14px 32px;flex-wrap:wrap;
+    box-shadow:var(--shadow-1);
     overflow:hidden;
   }
-  .quote-text{margin:0;}
-  .quote-en{
-    font-family:Georgia,"Times New Roman",serif;
-    font-style:italic;font-weight:700;font-size:24px;color:var(--accent-ink);line-height:1.25;
+  .mt-head{
+    display:flex;flex-direction:column;justify-content:center;
+    padding:10px 18px;
+    background:var(--surface-alt);
+    border-right:1px solid var(--line);
+    font-size:12.5px;font-weight:800;color:var(--ink);line-height:1.35;
+    white-space:nowrap;
   }
-  .quote-ja{
-    font-size:18px;font-weight:800;color:var(--ink);margin-top:2px;letter-spacing:0.04em;
-    text-align:center; /* 英文の幅の中央に配置 */
+  .mt-head small{font-size:11px;font-weight:500;color:var(--ink-muted);}
+  .mt{
+    position:relative;
+    display:flex;align-items:center;gap:14px;
+    padding:10px 18px;
+    min-width:0;
   }
-  .quote-by{
-    font-size:12.5px;color:var(--ink-muted);text-align:right;line-height:1.5;
-    padding-left:20px;border-left:2px solid var(--accent-soft-strong);
+  /* 平日5日のミニカレンダー。開催曜日だけを塗りつぶし、週の中の位置を示す */
+  .mt-week{
+    flex-shrink:0;
+    display:grid;grid-template-columns:repeat(5, 21px);gap:3px;
   }
-  .quote-by strong{color:var(--ink);font-weight:700;}
+  .mt-week span{
+    height:34px;border-radius:5px;
+    display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px;
+    font-size:11.5px;font-weight:800;line-height:1;
+    color:var(--ink-faint);
+    background:var(--surface-alt);
+    box-shadow:inset 0 3px 0 var(--line-strong);
+  }
+  .mt-week span.on{
+    color:var(--accent-ink);
+    background:var(--accent-soft-strong);
+    box-shadow:inset 0 3px 0 var(--accent);
+  }
+  .mt-body{min-width:0;}
+  .mt-dow{color:var(--accent-ink);font-weight:800;}
+  .mt-when{
+    display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+    font-size:12px;color:var(--ink-muted);font-weight:600;
+  }
+  .mt-time{
+    font-size:22px;font-weight:900;color:var(--ink);
+    font-variant-numeric:tabular-nums;letter-spacing:-0.01em;line-height:1.1;
+  }
+  .mt-time small{font-size:12px;font-weight:700;color:var(--ink-muted);margin-left:2px;}
+  .mt-title{font-size:14px;font-weight:800;color:var(--ink);line-height:1.35;margin-top:1px;}
+  .mt-who{font-size:11.5px;color:var(--ink-muted);}
+  .mt-side{margin-left:auto;flex-shrink:0;display:flex;align-items:center;gap:10px;}
+  .mt-pill{
+    display:inline-block;
+    font-size:11px;font-weight:700;
+    padding:2px 9px;border-radius:999px;
+    background:var(--surface-alt);color:var(--ink-muted);
+    white-space:nowrap;
+  }
+  .mt-agenda{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-width:64px;padding:5px 10px 6px;
+    border:1.5px solid var(--accent-soft-strong);border-radius:var(--radius-m);
+    background:var(--surface);color:var(--accent-ink);
+    font-family:var(--font-jp);cursor:pointer;line-height:1.15;
+    transition:border-color .12s, background .12s;
+  }
+  .mt-agenda:hover{border-color:var(--accent);background:var(--accent-soft);}
+  .mt-agenda:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .mt-agenda span{font-size:10.5px;font-weight:700;color:var(--ink-muted);}
+  .mt-agenda b{font-size:20px;font-weight:900;font-variant-numeric:tabular-nums;}
+  .mt-agenda b small{font-size:11px;font-weight:700;margin-left:1px;color:var(--ink-muted);}
+  .mt-agenda.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .mt-agenda.active span, .mt-agenda.active b small{color:rgba(255,255,255,0.85);}
+  /* 次に来るミーティングを強調 */
+  .mt.is-next{background:linear-gradient(90deg, var(--accent-soft) 0%, var(--surface) 100%);}
+  .mt.is-next::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent);
+  }
+  .mt.is-next .mt-week span.on{background:var(--accent);color:#fff;box-shadow:inset 0 3px 0 var(--accent-ink);}
+  .mt.is-next .mt-pill{background:var(--accent);color:#fff;}
+  .mt.is-today .mt-pill{background:var(--warn);color:#fff;}
+  /* 課内 → 役員 の流れを示す矢印 */
+  .mt-arrow{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    padding:0 6px;color:var(--ink-faint);
+    font-size:10.5px;font-weight:700;white-space:nowrap;
+  }
+  .mt-arrow svg{display:block;}
+  @media (max-width:1100px){
+    .meetings{grid-template-columns:1fr auto 1fr;}
+    .mt-head{grid-column:1 / -1;flex-direction:row;gap:10px;align-items:baseline;border-right:none;border-bottom:1px solid var(--line);padding:7px 18px;}
+  }
   @media (max-width:720px){
-    .quote{padding:12px 16px;}
-    .quote-en{font-size:19px;}
-    .quote-ja{font-size:15px;}
-    .quote-by{text-align:left;padding-left:0;border-left:none;}
+    .meetings{grid-template-columns:1fr;}
+    .mt-arrow{flex-direction:row;padding:2px 0;}
+    .mt-arrow svg{transform:rotate(90deg);}
+    .mt-time{font-size:19px;}
+    .mt{gap:12px;padding:10px 14px;}
+    .mt-week{grid-template-columns:repeat(5, 15px);gap:2px;}
+    .mt-week span{height:28px;font-size:9.5px;padding-bottom:4px;}
   }
 
   /* ---------- Summary counts ---------- */
@@ -230,6 +307,22 @@
   .sfg-chip.sfg-完了.active{background:var(--good);border-color:var(--good);color:#fff;}
   .sfg-chip.sfg-却下.active{background:var(--danger);border-color:var(--danger);color:#fff;}
 
+  .exec-filter{
+    display:inline-flex;align-items:center;gap:7px;
+    border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink-muted);
+    font-family:var(--font-jp);font-size:12px;font-weight:700;
+    padding:6px 11px;border-radius:var(--radius-s);cursor:pointer;
+    transition:background .12s, color .12s, border-color .12s;
+  }
+  .exec-filter:hover{border-color:var(--accent);}
+  .exec-filter .cnt{
+    min-width:20px;padding:0 6px;border-radius:999px;
+    background:var(--accent-soft);color:var(--accent-ink);
+    font-size:11px;line-height:18px;text-align:center;font-variant-numeric:tabular-nums;
+  }
+  .exec-filter.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .exec-filter.active .cnt{background:rgba(255,255,255,0.22);color:#fff;}
+
   select, .btn{
     font-family:var(--font-jp);
     font-size:13px;
@@ -302,6 +395,32 @@
   tbody tr.expanded{background:var(--accent-soft);}
   td{padding:11px 12px;vertical-align:top;}
   .cell-assignee{font-weight:600;white-space:nowrap;}
+  .cell-no{
+    width:1%;white-space:nowrap;text-align:right;
+    font-weight:800;font-size:13px;color:var(--ink-muted);
+    font-variant-numeric:tabular-nums;
+  }
+  thead th.th-no{text-align:right;}
+  .cell-exec{width:1%;text-align:center;}
+  thead th.th-exec{text-align:center;}
+  .exec-toggle{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:26px;height:26px;margin-top:6px;
+    border:1.5px dashed var(--line-strong);border-radius:7px;
+    background:var(--surface);color:transparent;
+    cursor:pointer;padding:0;
+    transition:border-color .12s, background .12s;
+  }
+  .exec-toggle:hover{border-color:var(--accent);border-style:solid;}
+  .exec-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .exec-toggle.on{background:var(--accent);border:1.5px solid var(--accent);color:#fff;}
+  .exec-toggle svg{display:block;}
+  .exec-tag{
+    display:inline-block;margin-left:6px;vertical-align:1px;
+    font-size:10px;font-weight:800;
+    color:var(--accent-ink);background:var(--accent-soft-strong);
+    padding:1px 6px;border-radius:4px;
+  }
   .cell-title{max-width:280px;}
   .cell-title .t{font-weight:600;color:var(--ink);}
   .cell-title .sub{color:var(--ink-muted);font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;}
@@ -432,6 +551,14 @@
   .field input:focus, .field textarea:focus, .field select:focus{border-color:var(--accent);}
   .field textarea{resize:vertical;min-height:64px;line-height:1.5;}
   .field-row{display:flex;gap:12px;}
+  .field-check{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-s);
+    background:var(--surface-alt);cursor:pointer;
+    font-size:13px;font-weight:700;color:var(--ink);
+  }
+  .field-check input{width:17px;height:17px;accent-color:var(--accent);margin:0;cursor:pointer;}
+  .field-check small{display:block;font-size:11px;font-weight:500;color:var(--ink-muted);}
   .field-row .field{flex:1;}
   .modal-foot{
     display:flex;justify-content:space-between;align-items:center;
@@ -476,7 +603,7 @@
   @media (max-width:720px){
     .header{flex-direction:column;align-items:stretch;}
     .cell-title{max-width:150px;}
-    thead th:nth-child(1), td:nth-child(1){display:none;}
+    thead th:nth-child(2), tbody tr[data-id] td:nth-child(2){display:none;}
   }
 </style>
 </head>
@@ -501,6 +628,7 @@ let state = {
   search: '',
   fAssignee: '',
   fStatuses: ['進行中','保留'],
+  fExec: false,
   sortKey: 'score',
   sortDir: 'desc',
   expandedId: null,
@@ -533,6 +661,59 @@ function esc(s){
 function uid(){
   return 'itm-' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 }
+/* ---- 通し番号 ----
+   スプレッドシートの「No」列に保存します。
+   No が未設定の案件は、発案日の古い順に既存の最大番号の続きから割り当てます。 */
+const NO_KEY = 'No';
+const EXEC_KEY = '定例役員MTG';
+const EXEC_KEY_OLD = '火曜MTG'; // 旧列名（残っていれば読み取りだけ対応）
+let noMap = new Map();
+function parseNo(v){ const n = parseInt(v, 10); return Number.isFinite(n) && n > 0 ? n : null; }
+function rebuildNumbers(){
+  noMap = new Map();
+  let max = 0;
+  const missing = [];
+  state.items.forEach((it, idx)=>{
+    const n = parseNo(it[NO_KEY]);
+    if(n){ noMap.set(it.id, n); if(n > max) max = n; }
+    else missing.push({ it, idx });
+  });
+  missing.sort((a,b)=>{
+    const da = a.it.発案日 || '9999-99-99', db = b.it.発案日 || '9999-99-99';
+    if(da !== db) return da < db ? -1 : 1;
+    return a.idx - b.idx;
+  });
+  missing.forEach(({it})=> noMap.set(it.id, ++max));
+  return missing.map(m=>m.it);
+}
+function getNo(item){ return noMap.get(item.id) ?? 0; }
+function nextNo(){ let m = 0; noMap.forEach(v=>{ if(v > m) m = v; }); return m + 1; }
+// シートに「No」列がある場合だけ、未設定の番号を書き込んで固定する
+async function backfillNumbers(){
+  if(!state.items.length || !(NO_KEY in state.items[0])) return;
+  const missing = rebuildNumbers();
+  for(const it of missing){
+    it[NO_KEY] = noMap.get(it.id);
+    try{ await apiUpdate(it); }catch(e){ return; }
+  }
+  if(missing.length) state.lastSyncedJSON = JSON.stringify(state.items);
+}
+
+/* ---- 定例役員MTG（毎週火曜 役員・総務課長）に挙げる案件 ---- */
+function isExec(item){
+  const v = (EXEC_KEY in item) ? item[EXEC_KEY] : item[EXEC_KEY_OLD];
+  return v === true || v === 1 || ['true','TRUE','1','○','済'].includes(String(v));
+}
+function execCount(){ return state.items.filter(isExec).length; }
+function showExecAgenda(){
+  state.fExec = !state.fExec;
+  render();
+  if(state.fExec){
+    const el = document.getElementById('mainArea');
+    if(el && window.scrollY === 0) window.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top - 220), behavior:'smooth' });
+  }
+}
+
 // おすすめ順：①期限超過を先頭 ②ステータス（進行中→保留→完了→却下） ③期日の近い順（期日なしは後ろ）
 function compareRecommended(a, b){
   const oa = isOverdue(a) ? 0 : 1, ob = isOverdue(b) ? 0 : 1;
@@ -589,6 +770,8 @@ async function initData(){
   try{
     state.items = await apiList();
     state.lastSyncedJSON = JSON.stringify(state.items);
+    rebuildNumbers();
+    backfillNumbers(); // バックグラウンドで実行
   }catch(e){
     console.error(e);
     showToast('スプレッドシートへの接続に失敗しました');
@@ -604,25 +787,72 @@ async function pollApi(){
     if(j !== state.lastSyncedJSON){
       state.items = latest;
       state.lastSyncedJSON = j;
+      rebuildNumbers();
       render();
     }
   }catch(e){ /* 次回のポーリングで再試行 */ }
 }
 
-/* ============ Quote ============ */
-function renderQuote(){
-  return `
-    <figure class="quote">
-      <blockquote class="quote-text">
-        <div class="quote-en">“Procrastination is the thief of time.”</div>
-        <div class="quote-ja">「先延ばしは時間泥棒である。」</div>
-      </blockquote>
-      <figcaption class="quote-by">
-        <strong>エドワード・ヤング（Edward Young）</strong><br>
-        イギリスの詩人・劇作家（1683〜1765年）
-      </figcaption>
-    </figure>`;
+/* ============ Weekly meetings ============ */
+// dow: 0=日 1=月 2=火 …  /  duration: 開催中とみなす時間（分）
+const MEETINGS = [
+  { id:'team',  dow:1, h:9,  m:0, duration:60, title:'総務課内ミーティング',   who:'総務課メンバー全員' },
+  { id:'exec',  dow:2, h:10, m:0, duration:60, title:'定例役員ミーティング', who:'役員／総務課長' },
+];
+const DOW_JA = ['日','月','火','水','木','金','土'];
+
+// 次回の開催日時（開催中なら今回分）を返す
+// 次回の開催日時（開催中なら今回分）
+function nextMeetingDate(mt, now){
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), mt.h, mt.m);
+  d.setDate(d.getDate() + (mt.dow - now.getDay() + 7) % 7);
+  if(d.getTime() + mt.duration*60000 <= now.getTime()) d.setDate(d.getDate() + 7);
+  return d;
 }
+function renderMeetingsInner(){
+  const now = new Date();
+  const items = MEETINGS.map(mt=>({ mt, start: nextMeetingDate(mt, now) }));
+  const nextId = items.reduce((a,b)=> a.start <= b.start ? a : b).mt.id;
+  const card = ({mt, start})=>{
+    const isToday = start.toDateString() === now.toDateString();
+    const live = now >= start;
+    const pill = live ? '開催中' : isToday ? '本日' : (mt.id === nextId ? '次回' : '');
+    const cls = ['mt', mt.id===nextId?'is-next':'', isToday?'is-today':''].join(' ');
+    const agenda = mt.id === 'exec' ? `
+      <button type="button" class="mt-agenda ${state.fExec?'active':''}" onclick="showExecAgenda()" title="議題に挙げる案件だけを表示">
+        <span>議題</span><b>${execCount()}<small>件</small></b>
+      </button>` : '';
+    return `
+      <div class="${cls}">
+        <div class="mt-week" aria-hidden="true">${[1,2,3,4,5].map(d=>`<span class="${d===mt.dow?'on':''}">${DOW_JA[d]}</span>`).join('')}</div>
+        <div class="mt-body">
+          <div class="mt-when"><span class="mt-time">${mt.h}:${String(mt.m).padStart(2,'0')}<small>〜</small></span><span class="mt-dow">毎週${DOW_JA[mt.dow]}曜日</span></div>
+          <div class="mt-title">${mt.title}</div>
+          <div class="mt-who">${mt.who}</div>
+        </div>
+        <div class="mt-side">
+          ${pill ? `<span class="mt-pill">${pill}</span>` : ''}
+          ${agenda}
+        </div>
+      </div>`;
+  };
+  return `
+    <div class="mt-head">定例ミーティング<small>毎週の流れ</small></div>
+    ${card(items[0])}
+    <div class="mt-arrow" aria-hidden="true">
+      <svg width="34" height="14" viewBox="0 0 34 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="7" x2="30" y2="7"/><polyline points="24,2 31,7 24,12"/></svg>
+      翌日
+    </div>
+    ${card(items[1])}`;
+}
+function renderMeetings(){
+  return `<section class="meetings" id="meetingStrip" aria-label="定例ミーティング">${renderMeetingsInner()}</section>`;
+}
+// 「本日」「あとN日」などの表示を1分ごとに更新
+setInterval(()=>{
+  const el = document.getElementById('meetingStrip');
+  if(el) el.innerHTML = renderMeetingsInner();
+}, 60000);
 
 /* ============ Summary counts ============ */
 // 期日から1カ月が過ぎているか（例：4/15期日 → 5/16以降が「超過」）
@@ -679,10 +909,13 @@ function filteredSorted(){
   let list = state.items.filter(item=>{
     if(state.search){
       const q = state.search.toLowerCase();
-      const hay = [item['案件・提案内容'], item['詳細内容'], item.担当者, item['進捗状況コメント']].join(' ').toLowerCase();
+      const no = getNo(item);
+      const hay = [item['案件・提案内容'], item['詳細内容'], item.担当者, item['進捗状況コメント'], `no.${no}`, `#${no}`].join(' ').toLowerCase();
+      if(/^(no\.?|#)?\s*\d+$/i.test(q.trim())){ if(String(no) === q.replace(/\D/g,'')) return true; }
       if(!hay.includes(q)) return false;
     }
     if(state.fAssignee && item.担当者 !== state.fAssignee) return false;
+    if(state.fExec) return isExec(item); // 議題表示中はステータスに関係なく表示
     if(state.fStatuses.length && !state.fStatuses.includes(item.ステータス)) return false;
     return true;
   });
@@ -691,6 +924,7 @@ function filteredSorted(){
   const key = state.sortKey;
   list.sort((a,b)=>{
     if(key === 'score') return compareRecommended(a, b); // おすすめ順は向きを固定
+    if(key === NO_KEY) return (getNo(a) - getNo(b)) * dir;
     const av = a[key] ?? '', bv = b[key] ?? '';
     if(av < bv) return -1*dir;
     if(av > bv) return 1*dir;
@@ -714,7 +948,7 @@ function render(){
           </div>
         </div>
       </div>
-      ${renderQuote()}
+      ${renderMeetings()}
       <div class="table-wrap">
         <div class="empty-state">
           <div class="loading-spinner"></div>
@@ -736,7 +970,7 @@ function render(){
           </div>
         </div>
       </div>
-      ${renderQuote()}
+      ${renderMeetings()}
       <div class="table-wrap">
         <div class="empty-state" style="text-align:left;padding:32px 36px;">
           <div class="big" style="text-align:center;">⚙️</div>
@@ -765,7 +999,7 @@ function render(){
       ${renderSummary()}
     </div>
 
-    ${renderQuote()}
+    ${renderMeetings()}
     </div>
 
     <div class="toolbar">
@@ -778,14 +1012,18 @@ function render(){
         <option value="">担当者：すべて</option>
         ${assignees.map(a=>`<option value="${esc(a)}" ${state.fAssignee===a?'selected':''}>${esc(a)}</option>`).join('')}
       </select>
-      <div class="status-filter-group">
+      <div class="status-filter-group" style="${state.fExec?'opacity:.45;':''}" title="${state.fExec?'議題表示中はステータスに関係なくすべて表示します':''}">
         <span class="sfg-label">ステータス</span>
         ${STATUS_LIST.map(s=>`
           <button class="sfg-chip sfg-${s} ${state.fStatuses.includes(s)?'active':''}" data-status="${s}">${s}</button>
         `).join('')}
       </div>
+      <button type="button" class="exec-filter ${state.fExec?'active':''}" id="fExec" aria-pressed="${state.fExec}">
+        定例役員MTGの議題のみ<span class="cnt">${execCount()}</span>
+      </button>
       <select id="sortSelect">
         <option value="score" ${state.sortKey==='score'?'selected':''}>並び順：おすすめ（期限超過・期日順）</option>
+        <option value="No" ${state.sortKey==='No'?'selected':''}>並び順：通し番号</option>
         <option value="期日" ${state.sortKey==='期日'?'selected':''}>並び順：期日</option>
         <option value="発案日" ${state.sortKey==='発案日'?'selected':''}>並び順：発案日</option>
         <option value="担当者" ${state.sortKey==='担当者'?'selected':''}>並び順：担当者</option>
@@ -805,12 +1043,13 @@ function render(){
       render();
     });
   });
-  document.getElementById('sortSelect').addEventListener('change', e=>{state.sortKey=e.target.value; render();});
+  document.getElementById('sortSelect').addEventListener('change', e=>{state.sortKey=e.target.value; state.sortDir='asc'; render();});
+  document.getElementById('fExec').addEventListener('click', ()=>{ state.fExec = !state.fExec; render(); });
   document.getElementById('btnAdd').addEventListener('click', ()=>openModal(null));
 
   const mainArea = document.getElementById('mainArea');
   if(list.length === 0){
-    mainArea.innerHTML = `<div class="table-wrap"><div class="empty-state"><div class="big">🔍</div>該当する案件がありません。検索・フィルター条件を見直してください。</div></div>`;
+    mainArea.innerHTML = `<div class="table-wrap"><div class="empty-state"><div class="big">🔍</div>${state.fExec ? '定例役員MTGの議題に挙げている案件はまだありません。一覧の「定例役員MTG」欄にチェックを入れると、ここに表示されます。' : '該当する案件がありません。検索・フィルター条件を見直してください。'}</div></div>`;
     return;
   }
   mainArea.innerHTML = renderTable(list);
@@ -828,6 +1067,7 @@ function renderTable(list){
     const expanded = state.expandedId === item.id;
     let html = `
       <tr data-id="${item.id}" class="${overdue?'overdue-row':''} ${expanded?'expanded':''}">
+        <td class="cell-no">${getNo(item)}</td>
         <td class="cell-assignee">${esc(item.担当者)}</td>
         <td class="cell-title">
           <div class="t">${esc(item['案件・提案内容'])}</div>
@@ -841,6 +1081,12 @@ function renderTable(list){
           ${overdue ? '<div class="overdue-tag">期限超過</div>' : ''}
         </td>
         <td><div class="stamp stamp-${item.ステータス}" title="クリックで変更先を選択">${item.ステータス}</div></td>
+        <td class="cell-exec">
+          <button type="button" class="exec-toggle ${isExec(item)?'on':''}" role="checkbox" aria-checked="${isExec(item)}"
+            title="${isExec(item)?'定例役員MTGの議題から外す':'定例役員MTGの議題に挙げる'}" aria-label="No.${getNo(item)}を定例役員MTGの議題に挙げる">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,12.5 10,18 20,6"/></svg>
+          </button>
+        </td>
         <td>
           <div class="row-actions">
             <button class="btn btn-ghost btn-icon btn-edit" title="編集">✎</button>
@@ -850,7 +1096,7 @@ function renderTable(list){
       </tr>`;
     if(expanded){
       html += `
-      <tr class="detail-row"><td colspan="6">
+      <tr class="detail-row"><td colspan="8">
         <div class="detail-grid">
           <div class="detail-block">
             <h4>詳細内容</h4>
@@ -875,11 +1121,13 @@ function renderTable(list){
       <table>
         <thead>
           <tr>
+            <th data-key="No" class="th-no ${state.sortKey==='No'?'sorted':''}">No. <span class="arrow">${sortArrow('No')}</span></th>
             <th data-key="担当者" class="${state.sortKey==='担当者'?'sorted':''}">担当者 <span class="arrow">${sortArrow('担当者')}</span></th>
             <th class="no-sort">案件・提案内容</th>
             <th data-key="発案日" class="${state.sortKey==='発案日'?'sorted':''}">発案日 <span class="arrow">${sortArrow('発案日')}</span></th>
             <th data-key="期日" class="${state.sortKey==='期日'?'sorted':''}">期日 <span class="arrow">${sortArrow('期日')}</span></th>
             <th data-key="ステータス" class="${state.sortKey==='ステータス'?'sorted':''}">ステータス <span class="arrow">${sortArrow('ステータス')}</span></th>
+            <th class="no-sort th-exec" title="毎週火曜の役員・総務課長ミーティングに挙げる案件">定例MTG対象案件</th>
             <th class="no-sort">操作</th>
           </tr>
         </thead>
@@ -904,7 +1152,7 @@ function bindTableEvents(list){
   });
   document.querySelectorAll('tbody tr[data-id]').forEach(tr=>{
     tr.addEventListener('click', (e)=>{
-      if(e.target.closest('.btn') || e.target.closest('.stamp')) return;
+      if(e.target.closest('.btn') || e.target.closest('.stamp') || e.target.closest('.exec-toggle')) return;
       const id = tr.dataset.id;
       state.expandedId = state.expandedId === id ? null : id;
       render();
@@ -945,6 +1193,24 @@ function bindTableEvents(list){
         }catch(err){
           showToast('削除に失敗しました。通信環境をご確認ください');
         }
+        render();
+      }
+    });
+  });
+  document.querySelectorAll('.exec-toggle').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const item = state.items.find(i=>i.id===btn.closest('tr').dataset.id);
+      const prev = item[EXEC_KEY];
+      item[EXEC_KEY] = !isExec(item);
+      render();
+      try{
+        await apiUpdate(item);
+        state.lastSyncedJSON = JSON.stringify(state.items);
+        showToast(item[EXEC_KEY] ? `No.${getNo(item)} を定例役員MTGの議題に挙げました` : `No.${getNo(item)} を定例役員MTGの議題から外しました`);
+      }catch(err){
+        item[EXEC_KEY] = prev; // ロールバック
+        showToast('更新に失敗しました。通信環境をご確認ください');
         render();
       }
     });
@@ -1054,7 +1320,7 @@ function openModal(item){
   overlay.innerHTML = `
     <div class="modal">
       <div class="modal-head">
-        <h2>${isNew ? '新規登録' : '案件を編集'}</h2>
+        <h2>${isNew ? '新規登録' : `案件を編集<span style="margin-left:8px;font-size:13px;color:var(--ink-muted);font-weight:700;">No.${getNo(modalItem)}</span>`}</h2>
         <button class="btn btn-ghost btn-icon" id="modalClose">✕</button>
       </div>
       <div class="modal-body">
@@ -1083,6 +1349,10 @@ function openModal(item){
           </div>
         </div>
         <div class="field"><label>進捗状況コメント</label><textarea id="m_comment">${esc(modalItem['進捗状況コメント'])}</textarea></div>
+        <label class="field-check">
+          <input type="checkbox" id="m_exec" ${isExec(modalItem)?'checked':''}>
+          <span>定例役員MTGの議題に挙げる<small>毎週火曜 10:00〜 役員・総務課長</small></span>
+        </label>
       </div>
       <div class="modal-foot">
         <span></span>
@@ -1126,6 +1396,8 @@ function openModal(item){
     delete modalItem.優先度;
     modalItem.ステータス = isNew ? '進行中' : document.getElementById('m_status').value;
     modalItem['進捗状況コメント'] = document.getElementById('m_comment').value;
+    modalItem[EXEC_KEY] = document.getElementById('m_exec').checked;
+    if(isNew || !parseNo(modalItem[NO_KEY])) modalItem[NO_KEY] = isNew ? nextNo() : getNo(modalItem);
 
     const originalLabel = saveBtn.textContent;
     saveBtn.disabled = true;
@@ -1144,6 +1416,7 @@ function openModal(item){
         if(idx >= 0){ state.items[idx] = modalItem; }
       }
       state.lastSyncedJSON = JSON.stringify(state.items);
+      rebuildNumbers();
       closeModal();
       showToast(isNew ? '登録しました' : '保存しました');
     }catch(err){
