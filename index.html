@@ -683,21 +683,34 @@ function rebuildNumbers(){
 }
 function getNo(item){ return noMap.get(item.id) ?? 0; }
 function nextNo(){ let m = 0; noMap.forEach(v=>{ if(v > m) m = v; }); return m + 1; }
-// シートに「No」列がある場合だけ、未設定の番号を書き込んで固定する
+// 未設定の通し番号をシートに書き込んで固定する。
+// 「No」列が無いときは、まず1件だけ送って列が作られたか確かめてから残りを書き込む
 async function backfillNumbers(){
-  if(!state.items.length || !(NO_KEY in state.items[0])) return;
-  const missing = rebuildNumbers();
-  for(const it of missing){
-    it[NO_KEY] = noMap.get(it.id);
-    try{ await apiUpdate(it); }catch(e){ return; }
-  }
-  if(missing.length) state.lastSyncedJSON = JSON.stringify(state.items);
+  if(!state.items.length) return;
+  let missing = rebuildNumbers();
+  if(!missing.length) return;
+  try{
+    if(!(NO_KEY in state.items[0])){
+      const first = missing[0];
+      first[NO_KEY] = noMap.get(first.id);
+      await apiUpdate(first);
+      const latest = await apiList();
+      if(!latest.length || !(NO_KEY in latest[0])) return; // 列が作れない（古いApps Script）
+      state.items = latest;
+      missing = rebuildNumbers();
+    }
+    for(const it of missing){
+      it[NO_KEY] = noMap.get(it.id);
+      await apiUpdate(it);
+    }
+    state.lastSyncedJSON = JSON.stringify(state.items);
+  }catch(e){ console.warn('通し番号の書き込みに失敗', e); }
 }
 
 /* ---- 定例役員MTG（毎週火曜 社長/取締役/総務課長）に挙げる案件 ---- */
 function isExec(item){
   const v = (EXEC_KEY in item) ? item[EXEC_KEY] : item[EXEC_KEY_OLD];
-  return v === true || v === 1 || ['true','TRUE','1','○','済'].includes(String(v));
+  return v === true || v === 1 || ['true','1','○','済'].includes(String(v).trim().toLowerCase());
 }
 function execCount(){ return state.items.filter(isExec).length; }
 function showExecAgenda(){
@@ -734,27 +747,22 @@ async function apiList(){
   if(!res.ok) throw new Error('list failed: ' + res.status);
   return await res.json();
 }
-async function apiAdd(item){
-  await fetch(API_URL, {
+// 送信して、Apps Script から { ok:true } が返ってきたときだけ成功とみなす
+async function apiPost(payload){
+  const res = await fetch(API_URL, {
     method:'POST',
     headers:{ 'Content-Type':'text/plain;charset=utf-8' }, // text/plain でCORSプリフライトを回避
-    body: JSON.stringify({ action:'add', item })
+    body: JSON.stringify(payload)
   });
+  if(!res.ok) throw new Error('通信エラー: ' + res.status);
+  let data;
+  try{ data = await res.json(); }catch(e){ throw new Error('スプレッドシートから正しい応答がありませんでした'); }
+  if(!data || data.ok !== true) throw new Error(data && data.error ? data.error : '保存に失敗しました');
+  return data;
 }
-async function apiUpdate(item){
-  await fetch(API_URL, {
-    method:'POST',
-    headers:{ 'Content-Type':'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action:'update', item })
-  });
-}
-async function apiDelete(id){
-  await fetch(API_URL, {
-    method:'POST',
-    headers:{ 'Content-Type':'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action:'delete', id })
-  });
-}
+async function apiAdd(item){ return apiPost({ action:'add', item }); }
+async function apiUpdate(item){ return apiPost({ action:'update', item }); }
+async function apiDelete(id){ return apiPost({ action:'delete', id }); }
 
 async function initData(){
   if(!API_CONFIGURED){
@@ -1438,3 +1446,4 @@ setInterval(pollApi, 5000);
 </script>
 </body>
 </html>
+
